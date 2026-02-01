@@ -3,7 +3,7 @@ import { mutation, query } from "./_generated/server";
 
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 500;
-const RATE_LIMIT_MS = 5 * 60 * 1000; // 5 minutes
+const RATE_LIMIT_MS = 1000; // 1 second (Launch mode!)
 
 // Place a pixel
 export const placePixel = mutation({
