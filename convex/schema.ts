@@ -12,6 +12,11 @@ export default defineSchema({
     // Skynet prep: faction support
     faction: v.optional(v.string()), // "human" | "agent" | team names
     isHuman: v.optional(v.boolean()), // true for human players
+    // Pixel pool system
+    pixelPool: v.optional(v.number()), // current available pixels (default: 10)
+    maxPool: v.optional(v.number()), // cap (grows with level/purchases, default: 10)
+    lastRegenAt: v.optional(v.number()), // timestamp for regen calculation
+    level: v.optional(v.number()), // for future leveling system
   }).index("by_apiKey", ["apiKey"]),
 
   // Canvas pixels - each pixel is a document

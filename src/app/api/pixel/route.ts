@@ -38,11 +38,22 @@ export async function POST(request: Request) {
     console.error(error);
     // Return proper status codes
     let status = 500;
-    if (error.message?.includes("Rate limited")) {
+    const headers: Record<string, string> = {};
+    
+    if (error.message?.includes("No pixels available") || error.message?.includes("Rate limited")) {
       status = 429; // Too Many Requests
+      // Extract seconds from message for Retry-After header
+      const match = error.message.match(/(\d+) seconds?/);
+      if (match) {
+        headers["Retry-After"] = match[1];
+      }
     } else if (error.message?.includes("Invalid") || error.message?.includes("out of bounds")) {
       status = 400; // Bad Request
     }
-    return NextResponse.json({ error: error.message || "Internal server error" }, { status });
+    
+    return NextResponse.json(
+      { error: error.message || "Internal server error" },
+      { status, headers }
+    );
   }
 }

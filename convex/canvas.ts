@@ -6,6 +6,26 @@ const DEFAULT_CANVAS_WIDTH = 500;
 const DEFAULT_CANVAS_HEIGHT = 500;
 const DEFAULT_RATE_LIMIT_MS = 5 * 60 * 1000; // 5 minutes cooldown
 
+// Pool system defaults
+const DEFAULT_POOL_SIZE = 10;
+const DEFAULT_MAX_POOL = 10;
+const REGEN_RATE_MS = 5 * 60 * 1000; // 1 pixel per 5 minutes
+
+// Helper to calculate current pool with regeneration
+function calculateCurrentPool(
+  lastPool: number,
+  maxPool: number,
+  lastRegenAt: number,
+  now: number
+): { pool: number; newRegenAt: number } {
+  const elapsed = now - lastRegenAt;
+  const regenAmount = Math.floor(elapsed / REGEN_RATE_MS);
+  const newPool = Math.min(lastPool + regenAmount, maxPool);
+  // Move lastRegenAt forward by the time consumed by regen (not to now)
+  const newRegenAt = lastRegenAt + regenAmount * REGEN_RATE_MS;
+  return { pool: newPool, newRegenAt };
+}
+
 // Helper to get config value with fallback
 async function getConfigValue<T>(ctx: QueryCtx | MutationCtx, key: string, defaultValue: T): Promise<T> {
   const config = await ctx.db
@@ -54,13 +74,28 @@ export const placePixel = mutation({
       throw new Error("Invalid API key");
     }
 
-    // Check rate limit (configurable)
-    const rateLimitMs = await getConfigValue(ctx, "rateLimitMs", DEFAULT_RATE_LIMIT_MS);
     const now = Date.now();
-    if (agent.lastPixelAt && now - agent.lastPixelAt < rateLimitMs) {
-      const remainingMs = rateLimitMs - (now - agent.lastPixelAt);
-      const waitTime = Math.ceil(remainingMs / 1000);
-      throw new Error(`Rate limited. Please wait ${waitTime} second${waitTime !== 1 ? 's' : ''} before placing another pixel.`);
+    
+    // Initialize pool if not set (for existing agents)
+    const currentStoredPool = agent.pixelPool ?? DEFAULT_POOL_SIZE;
+    const maxPool = agent.maxPool ?? DEFAULT_MAX_POOL;
+    const lastRegenAt = agent.lastRegenAt ?? now;
+    
+    // Calculate current pool with regeneration
+    const { pool: currentPool, newRegenAt } = calculateCurrentPool(
+      currentStoredPool,
+      maxPool,
+      lastRegenAt,
+      now
+    );
+    
+    // Check if agent has pixels available
+    if (currentPool <= 0) {
+      // Calculate when next pixel will be available
+      const nextRegenAt = newRegenAt + REGEN_RATE_MS;
+      const waitMs = nextRegenAt - now;
+      const waitSeconds = Math.ceil(waitMs / 1000);
+      throw new Error(`No pixels available. Next pixel regenerates in ${waitSeconds} seconds.`);
     }
 
     // Find existing pixel at coordinates
@@ -96,13 +131,30 @@ export const placePixel = mutation({
       placedAt: now,
     });
 
-    // Update agent stats
+    // Update agent stats and pool
+    const newPoolAfterPlace = currentPool - 1;
     await ctx.db.patch(agent._id, {
       pixelsPlaced: agent.pixelsPlaced + 1,
       lastPixelAt: now,
+      pixelPool: newPoolAfterPlace,
+      lastRegenAt: newRegenAt,
+      maxPool: maxPool, // Ensure maxPool is set
     });
 
-    return { success: true, x, y, color };
+    // Calculate next regen time for response
+    const nextRegenAt = newPoolAfterPlace < maxPool ? newRegenAt + REGEN_RATE_MS : null;
+
+    return { 
+      success: true, 
+      x, 
+      y, 
+      color,
+      pool: {
+        remaining: newPoolAfterPlace,
+        max: maxPool,
+        nextRegenAt,
+      }
+    };
   },
 });
 
@@ -183,6 +235,52 @@ export const getPixelInfo = query({
       color: pixel.color,
       agentName: agent?.name ?? "Unknown",
       placedAt: pixel.placedAt,
+    };
+  },
+});
+
+// Get agent status (pool info)
+export const getAgentStatus = query({
+  args: { apiKey: v.string() },
+  handler: async (ctx, { apiKey }) => {
+    const agent = await ctx.db
+      .query("agents")
+      .withIndex("by_apiKey", (q) => q.eq("apiKey", apiKey))
+      .first();
+
+    if (!agent) {
+      throw new Error("Invalid API key");
+    }
+
+    const now = Date.now();
+    
+    // Get pool values with defaults
+    const currentStoredPool = agent.pixelPool ?? DEFAULT_POOL_SIZE;
+    const maxPool = agent.maxPool ?? DEFAULT_MAX_POOL;
+    const lastRegenAt = agent.lastRegenAt ?? now;
+    
+    // Calculate current pool with regeneration
+    const { pool: currentPool, newRegenAt } = calculateCurrentPool(
+      currentStoredPool,
+      maxPool,
+      lastRegenAt,
+      now
+    );
+    
+    // Calculate next regen time
+    const nextRegenAt = currentPool < maxPool ? newRegenAt + REGEN_RATE_MS : null;
+    
+    return {
+      name: agent.name,
+      pixelsPlaced: agent.pixelsPlaced,
+      pool: {
+        remaining: currentPool,
+        max: maxPool,
+        nextRegenAt,
+        regenRateMs: REGEN_RATE_MS,
+      },
+      level: agent.level ?? 1,
+      faction: agent.faction ?? null,
     };
   },
 });
