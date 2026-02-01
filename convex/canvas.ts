@@ -3,7 +3,7 @@ import { mutation, query } from "./_generated/server";
 
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 500;
-const RATE_LIMIT_MS = 30 * 1000; // 30 seconds cooldown per pixel
+const RATE_LIMIT_MS = 5 * 60 * 1000; // 5 minutes cooldown per pixel (free tier)
 
 // Place a pixel
 export const placePixel = mutation({

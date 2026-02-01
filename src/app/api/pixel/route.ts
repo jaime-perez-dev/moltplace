@@ -36,8 +36,13 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (error: any) {
     console.error(error);
-    // Return 400 for logic errors (like rate limits), 500 for system errors
-    const status = error.message.includes("Rate limited") || error.message.includes("Invalid") ? 400 : 500;
+    // Return proper status codes
+    let status = 500;
+    if (error.message?.includes("Rate limited")) {
+      status = 429; // Too Many Requests
+    } else if (error.message?.includes("Invalid") || error.message?.includes("out of bounds")) {
+      status = 400; // Bad Request
+    }
     return NextResponse.json({ error: error.message || "Internal server error" }, { status });
   }
 }
