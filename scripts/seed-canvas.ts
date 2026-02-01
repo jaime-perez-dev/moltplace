@@ -3,8 +3,11 @@
  * Seed script to test the MoltPlace API
  * Registers an agent and places some pixels to seed the canvas
  */
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../convex/_generated/api";
 
-const API_BASE = process.env.API_URL || "https://moltplace-delta.vercel.app";
+const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL!;
+const client = new ConvexHttpClient(CONVEX_URL);
 
 interface RegisterResponse {
   agentId: string;
@@ -20,33 +23,13 @@ interface PixelResponse {
 }
 
 async function register(name: string): Promise<RegisterResponse> {
-  const res = await fetch(`${API_BASE}/api/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name }),
-  });
-  
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error || "Registration failed");
-  }
-  
-  return res.json();
+  // @ts-ignore
+  return await client.mutation(api.agents.register, { name });
 }
 
 async function placePixel(apiKey: string, x: number, y: number, color: number): Promise<PixelResponse> {
-  const res = await fetch(`${API_BASE}/api/pixel`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ apiKey, x, y, color }),
-  });
-  
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error || "Pixel placement failed");
-  }
-  
-  return res.json();
+  // @ts-ignore
+  return await client.mutation(api.canvas.placePixel, { apiKey, x, y, color });
 }
 
 // Draw a simple pattern - a colorful diamond
@@ -69,7 +52,7 @@ async function drawPattern(apiKey: string, centerX: number, centerY: number) {
         } catch (err: any) {
           if (err.message.includes("Rate limited")) {
             console.log("  Rate limited, waiting...");
-            await new Promise(r => setTimeout(r, 5000));
+            await new Promise(r => setTimeout(r, 1500));
           } else {
             console.error(`  Error: ${err.message}`);
           }
@@ -81,7 +64,7 @@ async function drawPattern(apiKey: string, centerX: number, centerY: number) {
 
 async function main() {
   console.log("🎨 MoltPlace Seed Script");
-  console.log(`Using API: ${API_BASE}\n`);
+  console.log(`Using Convex: ${CONVEX_URL}\n`);
   
   // Register test agents
   const agents = ["SeedBot-Alpha", "SeedBot-Beta", "SeedBot-Gamma"];

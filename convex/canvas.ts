@@ -1,9 +1,26 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, QueryCtx, MutationCtx } from "./_generated/server";
 
-const CANVAS_WIDTH = 500;
-const CANVAS_HEIGHT = 500;
-const RATE_LIMIT_MS = 5 * 60 * 1000; // 5 minutes cooldown per pixel (free tier)
+// Default values (used when config not set)
+const DEFAULT_CANVAS_WIDTH = 500;
+const DEFAULT_CANVAS_HEIGHT = 500;
+const DEFAULT_RATE_LIMIT_MS = 5 * 60 * 1000; // 5 minutes cooldown
+
+// Helper to get config value with fallback
+async function getConfigValue<T>(ctx: QueryCtx | MutationCtx, key: string, defaultValue: T): Promise<T> {
+  const config = await ctx.db
+    .query("config")
+    .withIndex("by_key", (q) => q.eq("key", key))
+    .first();
+  return config ? (config.value as T) : defaultValue;
+}
+
+// Helper to get canvas dimensions
+async function getCanvasDimensions(ctx: QueryCtx | MutationCtx) {
+  const width = await getConfigValue(ctx, "canvasWidth", DEFAULT_CANVAS_WIDTH);
+  const height = await getConfigValue(ctx, "canvasHeight", DEFAULT_CANVAS_HEIGHT);
+  return { width, height };
+}
 
 // Place a pixel
 export const placePixel = mutation({
@@ -14,9 +31,12 @@ export const placePixel = mutation({
     color: v.number(),
   },
   handler: async (ctx, { apiKey, x, y, color }) => {
+    // Get dynamic canvas dimensions
+    const { width, height } = await getCanvasDimensions(ctx);
+    
     // Validate coordinates
-    if (x < 0 || x >= CANVAS_WIDTH || y < 0 || y >= CANVAS_HEIGHT) {
-      throw new Error("Coordinates out of bounds");
+    if (x < 0 || x >= width || y < 0 || y >= height) {
+      throw new Error(`Coordinates out of bounds (canvas is ${width}x${height})`);
     }
     
     // Validate color
@@ -34,10 +54,11 @@ export const placePixel = mutation({
       throw new Error("Invalid API key");
     }
 
-    // Check rate limit
+    // Check rate limit (configurable)
+    const rateLimitMs = await getConfigValue(ctx, "rateLimitMs", DEFAULT_RATE_LIMIT_MS);
     const now = Date.now();
-    if (agent.lastPixelAt && now - agent.lastPixelAt < RATE_LIMIT_MS) {
-      const remainingMs = RATE_LIMIT_MS - (now - agent.lastPixelAt);
+    if (agent.lastPixelAt && now - agent.lastPixelAt < rateLimitMs) {
+      const remainingMs = rateLimitMs - (now - agent.lastPixelAt);
       const waitTime = Math.ceil(remainingMs / 1000);
       throw new Error(`Rate limited. Please wait ${waitTime} second${waitTime !== 1 ? 's' : ''} before placing another pixel.`);
     }
@@ -94,11 +115,53 @@ export const getCanvas = query({
   },
 });
 
-// Get canvas dimensions
+// Get canvas dimensions (from config or defaults)
 export const getDimensions = query({
   args: {},
-  handler: async () => {
-    return { width: CANVAS_WIDTH, height: CANVAS_HEIGHT };
+  handler: async (ctx) => {
+    return await getCanvasDimensions(ctx);
+  },
+});
+
+// Get full config for admin/debugging
+export const getConfig = query({
+  args: {},
+  handler: async (ctx) => {
+    const configs = await ctx.db.query("config").collect();
+    const configMap: Record<string, unknown> = {};
+    configs.forEach((c) => {
+      configMap[c.key] = c.value;
+    });
+    
+    // Return with defaults filled in
+    return {
+      canvasWidth: configMap.canvasWidth ?? DEFAULT_CANVAS_WIDTH,
+      canvasHeight: configMap.canvasHeight ?? DEFAULT_CANVAS_HEIGHT,
+      rateLimitMs: configMap.rateLimitMs ?? DEFAULT_RATE_LIMIT_MS,
+    };
+  },
+});
+
+// Admin mutation to update config
+export const setConfig = mutation({
+  args: {
+    key: v.string(),
+    value: v.any(),
+  },
+  handler: async (ctx, { key, value }) => {
+    // Find existing config
+    const existing = await ctx.db
+      .query("config")
+      .withIndex("by_key", (q) => q.eq("key", key))
+      .first();
+    
+    if (existing) {
+      await ctx.db.patch(existing._id, { value });
+    } else {
+      await ctx.db.insert("config", { key, value });
+    }
+    
+    return { success: true, key, value };
   },
 });
 

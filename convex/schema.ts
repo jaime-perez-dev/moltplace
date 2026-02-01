@@ -9,6 +9,9 @@ export default defineSchema({
     pixelsPlaced: v.number(),
     lastPixelAt: v.optional(v.number()),
     createdAt: v.number(),
+    // Skynet prep: faction support
+    faction: v.optional(v.string()), // "human" | "agent" | team names
+    isHuman: v.optional(v.boolean()), // true for human players
   }).index("by_apiKey", ["apiKey"]),
 
   // Canvas pixels - each pixel is a document
@@ -28,4 +31,10 @@ export default defineSchema({
     agentId: v.id("agents"),
     placedAt: v.number(),
   }).index("by_time", ["placedAt"]),
+
+  // System configuration - expandable canvas, rate limits, etc.
+  config: defineTable({
+    key: v.string(),
+    value: v.any(), // Flexible value type for different config needs
+  }).index("by_key", ["key"]),
 });
