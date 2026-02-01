@@ -100,3 +100,49 @@ export const getDimensions = query({
     return { width: CANVAS_WIDTH, height: CANVAS_HEIGHT };
   },
 });
+
+// Get pixel info at coordinates
+export const getPixelInfo = query({
+  args: { x: v.number(), y: v.number() },
+  handler: async (ctx, { x, y }) => {
+    const pixel = await ctx.db
+      .query("pixels")
+      .withIndex("by_coords", (q) => q.eq("x", x).eq("y", y))
+      .first();
+    
+    if (!pixel) return null;
+    
+    const agent = await ctx.db.get(pixel.agentId);
+    return {
+      x: pixel.x,
+      y: pixel.y,
+      color: pixel.color,
+      agentName: agent?.name ?? "Unknown",
+      placedAt: pixel.placedAt,
+    };
+  },
+});
+
+// Get recent activity
+export const getRecentActivity = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, { limit = 10 }) => {
+    const history = await ctx.db
+      .query("pixelHistory")
+      .withIndex("by_time")
+      .order("desc")
+      .take(limit);
+    
+    const enriched = await Promise.all(
+      history.map(async (h) => {
+        const agent = await ctx.db.get(h.agentId);
+        return {
+          ...h,
+          agentName: agent?.name ?? "Unknown",
+        };
+      })
+    );
+    
+    return enriched;
+  },
+});
