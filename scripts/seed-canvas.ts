@@ -45,14 +45,14 @@ async function drawPattern(apiKey: string, centerX: number, centerY: number) {
         const colorIdx = (Math.abs(dx) + Math.abs(dy)) % colors.length;
         
         try {
-          await placePixel(apiKey, x, y, colors[colorIdx]);
-          console.log(`  Placed pixel at (${x}, ${y}) with color ${colors[colorIdx]}`);
+          const result = await placePixel(apiKey, x, y, colors[colorIdx]);
+          console.log(`  Placed pixel at (${x}, ${y}) with color ${colors[colorIdx]} (pool: ${(result as any).pool?.remaining ?? '?'})`);
           // Small delay to avoid overwhelming
           await new Promise(r => setTimeout(r, 100));
         } catch (err: any) {
-          if (err.message.includes("Rate limited")) {
-            console.log("  Rate limited, waiting...");
-            await new Promise(r => setTimeout(r, 1500));
+          if (err.message.includes("Rate limited") || err.message.includes("No pixels available")) {
+            console.log("  Pool exhausted or rate limited, waiting 5 minutes for regen...");
+            await new Promise(r => setTimeout(r, 5 * 60 * 1000)); // Wait for 1 pixel regen
           } else {
             console.error(`  Error: ${err.message}`);
           }
