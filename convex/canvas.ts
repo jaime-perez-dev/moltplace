@@ -3,7 +3,7 @@ import { mutation, query } from "./_generated/server";
 
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 500;
-const RATE_LIMIT_MS = 1000; // 1 second (Launch mode!)
+const RATE_LIMIT_MS = 30 * 1000; // 30 seconds cooldown per pixel
 
 // Place a pixel
 export const placePixel = mutation({
@@ -37,8 +37,9 @@ export const placePixel = mutation({
     // Check rate limit
     const now = Date.now();
     if (agent.lastPixelAt && now - agent.lastPixelAt < RATE_LIMIT_MS) {
-      const waitTime = Math.ceil((RATE_LIMIT_MS - (now - agent.lastPixelAt)) / 1000);
-      throw new Error(`Rate limited. Wait ${waitTime} seconds.`);
+      const remainingMs = RATE_LIMIT_MS - (now - agent.lastPixelAt);
+      const waitTime = Math.ceil(remainingMs / 1000);
+      throw new Error(`Rate limited. Please wait ${waitTime} second${waitTime !== 1 ? 's' : ''} before placing another pixel.`);
     }
 
     // Find existing pixel at coordinates

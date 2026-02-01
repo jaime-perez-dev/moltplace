@@ -16,6 +16,12 @@ export async function POST(request: Request) {
     if (typeof x !== "number" || typeof y !== "number") {
       return NextResponse.json({ error: "Coordinates x and y must be numbers" }, { status: 400 });
     }
+    if (!Number.isInteger(x) || !Number.isInteger(y)) {
+      return NextResponse.json({ error: "Coordinates x and y must be integers" }, { status: 400 });
+    }
+    if (x < 0 || x >= 500 || y < 0 || y >= 500) {
+      return NextResponse.json({ error: "Coordinates out of bounds (0-499)" }, { status: 400 });
+    }
     if (typeof color !== "number" || color < 0 || color > 15) {
       return NextResponse.json({ error: "Color must be a number between 0 and 15" }, { status: 400 });
     }
