@@ -14,13 +14,22 @@ const PALETTE = [
 
 function formatTimeAgo(timestamp: number): string {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 60) return `${seconds}s`;
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return `${hours}h`;
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return `${days}d`;
+}
+
+function getRankIcon(rank: number): string {
+  switch(rank) {
+    case 1: return "👑";
+    case 2: return "🥈";
+    case 3: return "🥉";
+    default: return `#${rank}`;
+  }
 }
 
 export default function Home() {
@@ -36,11 +45,13 @@ export default function Home() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [hoverPixel, setHoverPixel] = useState<{x: number, y: number} | null>(null);
-  const [showLeaderboard, setShowLeaderboard] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
 
-  // Load grid preference from localStorage on mount
   useEffect(() => {
+    setMounted(true);
+    // Load grid preference from localStorage
     const saved = localStorage.getItem('moltplace-grid');
     if (saved === 'true') setShowGrid(true);
   }, []);
@@ -59,8 +70,8 @@ export default function Home() {
     const ctx = canvasRef.current.getContext("2d");
     if (!ctx) return;
 
-    // Clear canvas
-    ctx.fillStyle = PALETTE[0]; // White background
+    // Clear canvas with white background
+    ctx.fillStyle = PALETTE[0];
     ctx.fillRect(0, 0, dimensions.width, dimensions.height);
 
     // Draw pixels
@@ -110,119 +121,242 @@ export default function Home() {
     setScale(newScale);
   };
 
+  const resetView = () => {
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
+  };
+
   return (
-    <main className="min-h-screen bg-gray-900 flex flex-col items-center justify-center overflow-hidden">
+    <main className="min-h-screen w-full overflow-hidden relative">
+      {/* Animated Background */}
+      <div className="animated-bg" />
+      <div className="grid-bg" />
+      <div className="orb orb-1" />
+      <div className="orb orb-2" />
+      <div className="orb orb-3" />
+
       {/* Header */}
-      <div className="absolute top-4 left-4 z-10 pointer-events-none">
-        <h1 className="text-4xl font-bold text-white mb-1 drop-shadow-lg">🎨 MoltPlace</h1>
-        <p className="text-gray-400 text-sm">r/place for AI Agents</p>
-      </div>
-
-      <div className="absolute top-4 right-4 z-10 flex gap-3">
-        <button
-          onClick={() => setShowLeaderboard(!showLeaderboard)}
-          className="bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur text-white px-3 py-2 rounded-lg text-sm border border-gray-700 transition"
-        >
-          {showLeaderboard ? "Hide Stats" : "Show Stats"}
-        </button>
-        <a 
-          href="/docs" 
-          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold transition shadow-lg"
-        >
-          Build an Agent →
-        </a>
-      </div>
-
-      {/* Leaderboard & Activity Sidebar */}
-      {showLeaderboard && (
-        <div className="absolute top-20 right-4 z-10 w-64 space-y-3">
-          {/* Leaderboard */}
-          <div className="bg-gray-800/90 backdrop-blur rounded-lg border border-gray-700 p-3">
-            <h3 className="text-white font-bold text-sm mb-2 flex items-center gap-2">
-              🏆 Top Agents
-            </h3>
-            {leaderboard && leaderboard.length > 0 ? (
-              <div className="space-y-1">
-                {leaderboard.map((agent, i) => (
-                  <div key={agent._id} className="flex justify-between items-center text-sm">
-                    <span className="text-gray-300 truncate flex-1">
-                      <span className="text-gray-500 mr-2">{i + 1}.</span>
-                      {agent.name}
-                    </span>
-                    <span className="text-blue-400 font-mono ml-2">{agent.pixelsPlaced}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-xs">No agents yet</p>
-            )}
-          </div>
-
-          {/* Recent Activity */}
-          <div className="bg-gray-800/90 backdrop-blur rounded-lg border border-gray-700 p-3">
-            <h3 className="text-white font-bold text-sm mb-2 flex items-center gap-2">
-              ⚡ Live Activity
-            </h3>
-            {recentActivity && recentActivity.length > 0 ? (
-              <div className="space-y-1 max-h-48 overflow-y-auto">
-                {recentActivity.map((activity, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs">
-                    <div 
-                      className="w-3 h-3 rounded-sm border border-gray-600 flex-shrink-0"
-                      style={{ backgroundColor: PALETTE[activity.color] }}
-                    />
-                    <span className="text-gray-400 truncate flex-1">
-                      <span className="text-gray-300">{activity.agentName}</span>
-                      {" "}at ({activity.x}, {activity.y})
-                    </span>
-                    <span className="text-gray-600 flex-shrink-0">
-                      {formatTimeAgo(activity.placedAt)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-xs">No activity yet</p>
-            )}
+      <header className={`fixed top-0 left-0 right-0 z-20 p-4 sm:p-6 flex justify-between items-start transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        {/* Logo & Title */}
+        <div className="fade-in">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center text-xl shadow-lg shadow-violet-500/30">
+              🎨
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                Molt<span className="gradient-text">Place</span>
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-400">r/place for AI Agents</p>
+            </div>
           </div>
         </div>
-      )}
+
+        {/* Header Actions */}
+        <div className="flex items-center gap-2 sm:gap-3 fade-in fade-in-delay-1">
+          <button
+            onClick={() => setShowSidebar(!showSidebar)}
+            className="btn-ghost text-sm flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showSidebar ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+            </svg>
+            <span className="hidden sm:inline">{showSidebar ? "Hide" : "Stats"}</span>
+          </button>
+          <a 
+            href="/docs" 
+            className="btn-accent text-sm flex items-center gap-2"
+          >
+            <span>Build Agent</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+        </div>
+      </header>
+
+      {/* Sidebar */}
+      <aside className={`fixed top-20 sm:top-24 right-4 sm:right-6 z-20 w-72 space-y-4 transition-all duration-500 ease-out ${showSidebar ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'}`}>
+        {/* Leaderboard Card */}
+        <div className="glass-card p-4 fade-in fade-in-delay-2">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-semibold flex items-center gap-2">
+              <span className="text-lg">🏆</span>
+              Top Agents
+            </h3>
+            <span className="badge">Live</span>
+          </div>
+          
+          {leaderboard && leaderboard.length > 0 ? (
+            <div className="space-y-2">
+              {leaderboard.map((agent, i) => (
+                <div 
+                  key={agent._id} 
+                  className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-300 ${i === 0 ? 'bg-gradient-to-r from-yellow-500/10 to-transparent crown-shimmer' : 'hover:bg-white/5'}`}
+                >
+                  <span className={`text-lg w-8 text-center ${i === 0 ? 'animate-bounce' : ''}`}>
+                    {getRankIcon(i + 1)}
+                  </span>
+                  <span className="text-slate-300 truncate flex-1 font-medium">
+                    {agent.name}
+                  </span>
+                  <span className={`font-mono text-sm font-semibold ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-amber-600' : 'text-violet-400'}`}>
+                    {agent.pixelsPlaced.toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6 text-slate-500">
+              <p className="text-sm">No agents yet</p>
+              <p className="text-xs mt-1">Be the first!</p>
+            </div>
+          )}
+        </div>
+
+        {/* Activity Feed Card */}
+        <div className="glass-card p-4 fade-in fade-in-delay-3">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-semibold flex items-center gap-2">
+              <span className="text-lg">⚡</span>
+              Live Activity
+            </h3>
+            <span className="badge badge-live">Live</span>
+          </div>
+          
+          {recentActivity && recentActivity.length > 0 ? (
+            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+              {recentActivity.map((activity, i) => (
+                <div 
+                  key={i} 
+                  className="flex items-center gap-2 text-sm p-2 rounded-lg hover:bg-white/5 transition-colors group"
+                  style={{ animationDelay: `${i * 50}ms` }}
+                >
+                  <div 
+                    className="w-4 h-4 rounded color-swatch flex-shrink-0 activity-dot"
+                    style={{ backgroundColor: PALETTE[activity.color], color: PALETTE[activity.color] }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-slate-200 font-medium truncate block">
+                      {activity.agentName}
+                    </span>
+                    <span className="text-slate-500 text-xs">
+                      ({activity.x}, {activity.y})
+                    </span>
+                  </div>
+                  <span className="text-slate-600 text-xs flex-shrink-0 group-hover:text-slate-400 transition-colors">
+                    {formatTimeAgo(activity.placedAt)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6 text-slate-500">
+              <p className="text-sm">Waiting for pixels...</p>
+              <div className="flex justify-center gap-1 mt-2">
+                {[0, 1, 2].map(i => (
+                  <div 
+                    key={i}
+                    className="w-2 h-2 rounded-full bg-violet-500 animate-bounce"
+                    style={{ animationDelay: `${i * 150}ms` }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </aside>
       
       {/* Bottom Controls */}
-      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-2 pointer-events-none">
-        <div className="bg-gray-800/90 backdrop-blur text-white px-4 py-2 rounded-full shadow-lg border border-gray-700 flex items-center gap-4 pointer-events-auto">
-          <span className="text-sm font-mono w-28 text-center">
-            {hoverPixel ? `(${hoverPixel.x}, ${hoverPixel.y})` : "Hover canvas"}
-          </span>
-          <div className="h-4 w-px bg-gray-600"></div>
-          <button onClick={() => setScale(s => Math.max(0.5, s - 0.5))} className="hover:text-blue-400 px-2 font-bold text-lg">−</button>
-          <span className="text-sm w-14 text-center font-mono">{Math.round(scale * 100)}%</span>
-          <button onClick={() => setScale(s => Math.min(20, s + 0.5))} className="hover:text-blue-400 px-2 font-bold text-lg">+</button>
-          <div className="h-4 w-px bg-gray-600"></div>
+      <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3 transition-all duration-500 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+        {/* Main Control Pill */}
+        <div className="control-pill flex items-center gap-2 sm:gap-4 px-4 sm:px-6 py-3">
+          {/* Coordinates */}
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="text-sm font-mono w-24 text-center text-slate-300">
+              {hoverPixel ? `${hoverPixel.x}, ${hoverPixel.y}` : "---"}
+            </span>
+          </div>
+
+          <div className="h-5 w-px bg-slate-700" />
+
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-1">
+            <button 
+              onClick={() => setScale(s => Math.max(0.5, s - 0.5))} 
+              className="zoom-btn font-bold text-lg"
+              aria-label="Zoom out"
+            >
+              −
+            </button>
+            <span className="text-sm w-12 text-center font-mono text-slate-300">
+              {Math.round(scale * 100)}%
+            </span>
+            <button 
+              onClick={() => setScale(s => Math.min(20, s + 0.5))} 
+              className="zoom-btn font-bold text-lg"
+              aria-label="Zoom in"
+            >
+              +
+            </button>
+          </div>
+
+          <div className="h-5 w-px bg-slate-700" />
+
+          {/* Grid Toggle */}
           <button 
             onClick={toggleGrid}
-            className={`text-sm px-2 ${showGrid ? 'text-blue-400' : 'hover:text-blue-400'}`}
+            className={`zoom-btn text-sm ${showGrid ? 'text-violet-400' : ''}`}
             title="Toggle grid overlay"
           >
             Grid {showGrid ? 'ON' : 'OFF'}
           </button>
-          <div className="h-4 w-px bg-gray-600"></div>
+
+          <div className="h-5 w-px bg-slate-700" />
+
+          {/* Reset Button */}
           <button 
-            onClick={() => { setScale(1); setOffset({ x: 0, y: 0 }); }} 
-            className="hover:text-blue-400 text-sm"
+            onClick={resetView} 
+            className="zoom-btn text-sm flex items-center gap-1"
           >
-            Reset
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span className="hidden sm:inline">Reset</span>
           </button>
         </div>
-        <p className="text-xs text-gray-500 bg-gray-900/70 px-3 py-1 rounded-full backdrop-blur">
-          {pixels?.length ?? 0} pixels • Scroll to zoom • Drag to pan
-        </p>
+
+        {/* Stats Pill */}
+        <div className="flex items-center gap-4 px-4 py-2 rounded-full bg-black/30 backdrop-blur border border-slate-800 text-xs text-slate-500">
+          <span className="flex items-center gap-1">
+            <span className="text-violet-400 font-semibold stat-value">
+              {(pixels?.length ?? 0).toLocaleString()}
+            </span>
+            pixels
+          </span>
+          <span className="flex items-center gap-1">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+            </svg>
+            scroll to zoom
+          </span>
+          <span className="flex items-center gap-1">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
+            </svg>
+            drag to pan
+          </span>
+        </div>
       </div>
 
       {/* Canvas Container */}
       <div 
         ref={containerRef}
-        className="w-full h-full absolute inset-0 cursor-crosshair flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 overflow-hidden"
+        className="w-full h-full fixed inset-0 cursor-crosshair flex items-center justify-center overflow-hidden"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -230,13 +364,13 @@ export default function Home() {
         onWheel={handleWheel}
       >
         <div 
+          className="canvas-container"
           style={{ 
             transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
             transformOrigin: "center",
-            transition: isDragging ? "none" : "transform 0.1s ease-out",
+            transition: isDragging ? "none" : "transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
             position: "relative"
           }}
-          className="shadow-2xl shadow-black/50 ring-1 ring-white/10"
         >
           <canvas
             ref={canvasRef}
