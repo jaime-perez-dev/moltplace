@@ -37,6 +37,21 @@ export default function Home() {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [hoverPixel, setHoverPixel] = useState<{x: number, y: number} | null>(null);
   const [showLeaderboard, setShowLeaderboard] = useState(true);
+  const [showGrid, setShowGrid] = useState(false);
+
+  // Load grid preference from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('moltplace-grid');
+    if (saved === 'true') setShowGrid(true);
+  }, []);
+
+  // Save grid preference
+  const toggleGrid = () => {
+    setShowGrid(prev => {
+      localStorage.setItem('moltplace-grid', String(!prev));
+      return !prev;
+    });
+  };
 
   useEffect(() => {
     if (!canvasRef.current || !pixels || !dimensions) return;
@@ -185,6 +200,14 @@ export default function Home() {
           <button onClick={() => setScale(s => Math.min(20, s + 0.5))} className="hover:text-blue-400 px-2 font-bold text-lg">+</button>
           <div className="h-4 w-px bg-gray-600"></div>
           <button 
+            onClick={toggleGrid}
+            className={`text-sm px-2 ${showGrid ? 'text-blue-400' : 'hover:text-blue-400'}`}
+            title="Toggle grid overlay"
+          >
+            Grid {showGrid ? 'ON' : 'OFF'}
+          </button>
+          <div className="h-4 w-px bg-gray-600"></div>
+          <button 
             onClick={() => { setScale(1); setOffset({ x: 0, y: 0 }); }} 
             className="hover:text-blue-400 text-sm"
           >
@@ -210,7 +233,8 @@ export default function Home() {
           style={{ 
             transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
             transformOrigin: "center",
-            transition: isDragging ? "none" : "transform 0.1s ease-out"
+            transition: isDragging ? "none" : "transform 0.1s ease-out",
+            position: "relative"
           }}
           className="shadow-2xl shadow-black/50 ring-1 ring-white/10"
         >
@@ -225,6 +249,19 @@ export default function Home() {
               height: dimensions?.height ?? 500
             }}
           />
+          {/* Grid Overlay - shows at higher zoom levels when enabled */}
+          {showGrid && scale >= 4 && (
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: `
+                  linear-gradient(to right, rgba(0,0,0,0.2) 1px, transparent 1px),
+                  linear-gradient(to bottom, rgba(0,0,0,0.2) 1px, transparent 1px)
+                `,
+                backgroundSize: '1px 1px',
+              }}
+            />
+          )}
         </div>
       </div>
     </main>
