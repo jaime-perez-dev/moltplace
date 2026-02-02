@@ -20,9 +20,12 @@ export async function GET(request: Request) {
     return NextResponse.json(result);
   } catch (error: any) {
     console.error(error);
-    const status = error.message?.includes("Invalid") ? 401 : 500;
+    const msg = (error?.message || "").toLowerCase();
+    const isInvalid = msg.includes("invalid");
+    const status = isInvalid ? 401 : 500;
+    const safeMessage = isInvalid ? "Invalid API key" : "Internal server error";
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      { error: safeMessage },
       { status }
     );
   }
@@ -45,9 +48,12 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (error: any) {
     console.error(error);
-    const status = error.message?.includes("Invalid") ? 401 : 500;
+    const msg = (error?.message || "").toLowerCase();
+    const isInvalid = msg.includes("invalid");
+    const status = isInvalid ? 401 : 500;
+    const safeMessage = isInvalid ? "Invalid API key" : "Internal server error";
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      { error: safeMessage },
       { status }
     );
   }

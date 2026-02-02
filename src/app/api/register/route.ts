@@ -17,9 +17,21 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (error: any) {
     console.error(error);
-    // Return 400 for validation errors, 500 for system errors
-    const isValidationError = error.message?.includes("name") || error.message?.includes("characters") || error.message?.includes("taken");
-    const status = isValidationError ? 400 : 500;
-    return NextResponse.json({ error: error.message || "Internal server error" }, { status });
+    const msg = (error?.message || "").toLowerCase();
+    let status = 500;
+    let safeMessage = "Internal server error";
+
+    if (msg.includes("taken")) {
+      status = 400;
+      safeMessage = "Name already taken";
+    } else if (msg.includes("characters")) {
+      status = 400;
+      safeMessage = "Name must be 3-32 characters";
+    } else if (msg.includes("name")) {
+      status = 400;
+      safeMessage = "Invalid name";
+    }
+
+    return NextResponse.json({ error: safeMessage }, { status });
   }
 }

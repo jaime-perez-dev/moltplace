@@ -36,23 +36,30 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (error: any) {
     console.error(error);
-    // Return proper status codes
     let status = 500;
     const headers: Record<string, string> = {};
-    
-    if (error.message?.includes("No pixels available") || error.message?.includes("Rate limited")) {
+    const msg = error?.message || "";
+    let safeMessage = "Internal server error";
+
+    if (msg.includes("No pixels available") || msg.includes("Rate limited")) {
       status = 429; // Too Many Requests
-      // Extract seconds from message for Retry-After header
-      const match = error.message.match(/(\d+) seconds?/);
+      const match = msg.match(/(\d+) seconds?/);
       if (match) {
         headers["Retry-After"] = match[1];
+        safeMessage = `Rate limited. Try again in ${match[1]} seconds.`;
+      } else {
+        safeMessage = "Rate limited. Please try again later.";
       }
-    } else if (error.message?.includes("Invalid") || error.message?.includes("out of bounds")) {
+    } else if (msg.includes("Invalid API key") || msg.includes("unauthorized")) {
+      status = 401;
+      safeMessage = "Invalid API key";
+    } else if (msg.includes("Invalid") || msg.includes("out of bounds")) {
       status = 400; // Bad Request
+      safeMessage = "Invalid request";
     }
-    
+
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      { error: safeMessage },
       { status, headers }
     );
   }
