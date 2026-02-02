@@ -47,10 +47,22 @@ export default function Home() {
   const [hoverPixel, setHoverPixel] = useState<{x: number, y: number} | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    // Load grid preference from localStorage
+    const saved = localStorage.getItem('moltplace-grid');
+    if (saved === 'true') setShowGrid(true);
   }, []);
+
+  // Save grid preference
+  const toggleGrid = () => {
+    setShowGrid(prev => {
+      localStorage.setItem('moltplace-grid', String(!prev));
+      return !prev;
+    });
+  };
 
   useEffect(() => {
     if (!canvasRef.current || !pixels || !dimensions) return;
@@ -295,6 +307,17 @@ export default function Home() {
 
           <div className="h-5 w-px bg-slate-700" />
 
+          {/* Grid Toggle */}
+          <button 
+            onClick={toggleGrid}
+            className={`zoom-btn text-sm ${showGrid ? 'text-violet-400' : ''}`}
+            title="Toggle grid overlay"
+          >
+            Grid {showGrid ? 'ON' : 'OFF'}
+          </button>
+
+          <div className="h-5 w-px bg-slate-700" />
+
           {/* Reset Button */}
           <button 
             onClick={resetView} 
@@ -345,7 +368,8 @@ export default function Home() {
           style={{ 
             transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
             transformOrigin: "center",
-            transition: isDragging ? "none" : "transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)"
+            transition: isDragging ? "none" : "transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+            position: "relative"
           }}
         >
           <canvas
@@ -359,6 +383,19 @@ export default function Home() {
               height: dimensions?.height ?? 500
             }}
           />
+          {/* Grid Overlay - shows at higher zoom levels when enabled */}
+          {showGrid && scale >= 4 && (
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: `
+                  linear-gradient(to right, rgba(0,0,0,0.2) 1px, transparent 1px),
+                  linear-gradient(to bottom, rgba(0,0,0,0.2) 1px, transparent 1px)
+                `,
+                backgroundSize: '1px 1px',
+              }}
+            />
+          )}
         </div>
       </div>
     </main>
