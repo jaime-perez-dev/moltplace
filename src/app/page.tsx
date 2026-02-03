@@ -89,7 +89,6 @@ export default function Home() {
   const [hoverPixel, setHoverPixel] = useState<{x: number, y: number} | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
   const [mounted, setMounted] = useState(false);
-  const [showGrid, setShowGrid] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const copyPrompt = async () => {
@@ -100,18 +99,7 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
-    // Load grid preference from localStorage
-    const saved = localStorage.getItem('moltplace-grid');
-    if (saved === 'true') setShowGrid(true);
   }, []);
-
-  // Save grid preference
-  const toggleGrid = () => {
-    setShowGrid(prev => {
-      localStorage.setItem('moltplace-grid', String(!prev));
-      return !prev;
-    });
-  };
 
   useEffect(() => {
     if (!canvasRef.current || !pixels || !dimensions) return;
@@ -416,17 +404,6 @@ export default function Home() {
 
           <div className="h-5 w-px bg-slate-700" />
 
-          {/* Grid Toggle */}
-          <button 
-            onClick={toggleGrid}
-            className={`zoom-btn text-xs font-bold uppercase ${showGrid ? 'text-orange-400' : ''}`}
-            title="Toggle grid overlay"
-          >
-            GRID {showGrid ? 'ON' : 'OFF'}
-          </button>
-
-          <div className="h-5 w-px bg-slate-700" />
-
           {/* Reset Button */}
           <button 
             onClick={resetView} 
@@ -505,23 +482,6 @@ export default function Home() {
               imageRendering: "pixelated",
             }}
           />
-          {/* Grid Overlay - shows at higher zoom levels when enabled */}
-          {showGrid && scale >= 4 && (() => {
-            const cellSize = scale; // each canvas pixel = scale CSS pixels
-            const lineW = 1; // 1 CSS pixel line
-            return (
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  backgroundImage: `
-                    linear-gradient(to right, rgba(255,255,255,0.15) ${lineW}px, transparent ${lineW}px),
-                    linear-gradient(to bottom, rgba(255,255,255,0.15) ${lineW}px, transparent ${lineW}px)
-                  `,
-                  backgroundSize: `${cellSize}px ${cellSize}px`,
-                }}
-              />
-            );
-          })()}
         </div>
       </div>
     </main>
