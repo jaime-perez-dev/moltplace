@@ -500,11 +500,9 @@ export default function Home() {
             ref={canvasRef}
             width={dimensions?.width ?? 500}
             height={dimensions?.height ?? 500}
-            className="block bg-white"
+            className="block bg-white w-full h-full"
             style={{ 
               imageRendering: "pixelated",
-              width: dimensions?.width ?? 500,
-              height: dimensions?.height ?? 500
             }}
           />
           {/* Grid Overlay - shows at higher zoom levels when enabled */}

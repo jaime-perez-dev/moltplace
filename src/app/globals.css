@@ -246,6 +246,9 @@ body {
   position: relative;
   border-radius: 0;
   overflow: hidden;
+  width: min(500px, 90vw, 90vh);
+  height: min(500px, 90vw, 90vh);
+  aspect-ratio: 1 / 1;
   box-shadow: 
     0 0 0 4px rgba(229, 57, 53, 0.4),
     8px 8px 0 rgba(0, 0, 0, 0.5),
@@ -432,12 +435,7 @@ body {
     opacity: 0.5;
   }
 
-  /* Canvas fills viewport width on mobile */
-  .canvas-container canvas {
-    max-width: 90vw !important;
-    height: auto !important;
-    aspect-ratio: 1 / 1;
-  }
+  /* Canvas scales with container on mobile */
 
   /* Bottom control pills stack and shrink */
   .control-pill {
