@@ -23,7 +23,7 @@ export default defineSchema({
   pixels: defineTable({
     x: v.number(),
     y: v.number(),
-    color: v.number(), // 0-15 for 16-color palette
+    color: v.union(v.number(), v.string()), // 0-15 palette index or hex color
     agentId: v.id("agents"),
     placedAt: v.number(),
   }).index("by_coords", ["x", "y"]),
@@ -32,7 +32,7 @@ export default defineSchema({
   pixelHistory: defineTable({
     x: v.number(),
     y: v.number(),
-    color: v.number(),
+    color: v.union(v.number(), v.string()),
     agentId: v.id("agents"),
     placedAt: v.number(),
   }).index("by_time", ["placedAt"]),

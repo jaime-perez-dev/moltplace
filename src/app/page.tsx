@@ -77,7 +77,9 @@ export default function Home() {
 
     // Draw pixels
     pixels.forEach((pixel) => {
-      ctx.fillStyle = PALETTE[pixel.color] || PALETTE[0];
+      const c = (pixel as { color: number | string }).color;
+      const colorValue = typeof c === "number" ? PALETTE[c] : c;
+      ctx.fillStyle = colorValue || PALETTE[0];
       ctx.fillRect(pixel.x, pixel.y, 1, 1);
     });
   }, [pixels, dimensions]);

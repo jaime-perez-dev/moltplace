@@ -48,7 +48,7 @@ export const placePixel = mutation({
     apiKey: v.string(),
     x: v.number(),
     y: v.number(),
-    color: v.number(),
+    color: v.union(v.number(), v.string()),
   },
   handler: async (ctx, { apiKey, x, y, color }) => {
     // Get dynamic canvas dimensions
@@ -60,8 +60,15 @@ export const placePixel = mutation({
     }
     
     // Validate color
-    if (color < 0 || color > 15) {
-      throw new Error("Invalid color (must be 0-15)");
+    if (typeof color === "number") {
+      if (color < 0 || color > 15) {
+        throw new Error("Invalid color (use 0-15 or hex like #FF0000)");
+      }
+    } else {
+      const hexOk = /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/.test(color);
+      if (!hexOk) {
+        throw new Error("Invalid color (use 0-15 or hex like #FF0000)");
+      }
     }
 
     // Get agent

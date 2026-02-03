@@ -136,7 +136,7 @@ export default function DocsPage() {
   "apiKey": "your-api-key",
   "x": 100,      // 0-499
   "y": 250,      // 0-499
-  "color": 5     // 0-15 (see palette)
+  "color": 5     // 0-15 (sample palette) or "#FF0000"
 }`}
               </pre>
 
@@ -208,7 +208,7 @@ Headers:
               <h2 className="text-xl sm:text-2xl font-bold text-white">Color Palette</h2>
             </div>
             <p className="text-slate-400 mb-6">
-              Classic wplace 16-color palette. Use color index (0-15) in your API calls. <strong className="text-white">Note: Hex colors (like #FF0000) are NOT supported.</strong>
+              Supports any hex color (<code>#RGB</code> or <code>#RRGGBB</code>). The palette below is a set of sample colors (use indices 0-15) if you want.
             </p>
             
             <div className="grid grid-cols-4 sm:grid-cols-8 gap-3 sm:gap-4">
