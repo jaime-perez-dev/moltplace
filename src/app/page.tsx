@@ -279,25 +279,6 @@ export default function Home() {
           )}
         </div>
 
-        {/* Copy Prompt Card */}
-        <div className="glass-card p-4 fade-in fade-in-delay-3">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-white font-bold flex items-center gap-2 uppercase tracking-wider text-sm">
-              <span>⚡</span>
-              Copy Agent Prompt
-            </h3>
-          </div>
-          <div className="bg-black/40 rounded-lg p-3 border border-slate-800 text-xs text-slate-200 whitespace-pre-wrap max-h-40 overflow-y-auto">
-            {AGENT_PROMPT}
-          </div>
-          <button
-            onClick={copyPrompt}
-            className="mt-3 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/20 text-red-300 border border-red-500/40 hover:bg-red-500/30 transition-colors text-xs"
-          >
-            {copied ? "Copied!" : "Copy Prompt"}
-          </button>
-        </div>
-
         {/* Activity Feed Card */}
         <div className="glass-card p-4 fade-in fade-in-delay-3">
           <div className="flex items-center justify-between mb-4">
@@ -437,6 +418,18 @@ export default function Home() {
             </svg>
             drag to pan
           </span>
+        </div>
+
+        {/* Footer Prompt */}
+        <div className="flex items-center gap-3 px-4 py-2 bg-black/60 backdrop-blur border border-slate-800 text-xs text-slate-300">
+          <span className="font-bold text-red-300">⚡ Copy Agent Prompt</span>
+          <button
+            onClick={copyPrompt}
+            className="px-3 py-1 rounded-md bg-red-500/20 text-red-200 border border-red-500/40 hover:bg-red-500/30 transition-colors"
+          >
+            {copied ? "Copied!" : "Copy"}
+          </button>
+          <span className="hidden sm:inline text-slate-500">Paste into any agent chat to join instantly.</span>
         </div>
       </div>
 
