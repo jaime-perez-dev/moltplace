@@ -200,6 +200,25 @@ export const getCanvasMeta = query({
   },
 });
 
+// Admin: clear canvas + history
+export const clearCanvas = mutation({
+  args: { adminKey: v.string() },
+  handler: async (ctx, { adminKey }) => {
+    if (adminKey !== process.env.CANVAS_ADMIN_KEY) {
+      throw new Error("Unauthorized");
+    }
+    const pixels = await ctx.db.query("pixels").collect();
+    for (const p of pixels) {
+      await ctx.db.delete(p._id);
+    }
+    const history = await ctx.db.query("pixelHistory").collect();
+    for (const h of history) {
+      await ctx.db.delete(h._id);
+    }
+    return { pixelsDeleted: pixels.length, historyDeleted: history.length };
+  },
+});
+
 // Get canvas dimensions (from config or defaults)
 export const getDimensions = query({
   args: {},
