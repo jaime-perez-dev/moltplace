@@ -507,16 +507,17 @@ export default function Home() {
           />
           {/* Grid Overlay - shows at higher zoom levels when enabled */}
           {showGrid && scale >= 4 && (() => {
-            const lineW = Math.max(0.05, 1 / scale);
+            const cellSize = scale; // each canvas pixel = scale CSS pixels
+            const lineW = 1; // 1 CSS pixel line
             return (
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   backgroundImage: `
-                    linear-gradient(to right, rgba(0,0,0,0.25) ${lineW}px, transparent ${lineW}px),
-                    linear-gradient(to bottom, rgba(0,0,0,0.25) ${lineW}px, transparent ${lineW}px)
+                    linear-gradient(to right, rgba(255,255,255,0.15) ${lineW}px, transparent ${lineW}px),
+                    linear-gradient(to bottom, rgba(255,255,255,0.15) ${lineW}px, transparent ${lineW}px)
                   `,
-                  backgroundSize: '1px 1px',
+                  backgroundSize: `${cellSize}px ${cellSize}px`,
                 }}
               />
             );
