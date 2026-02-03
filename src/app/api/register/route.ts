@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../convex/_generated/api";
 import { getClientIp, rateLimit } from "../../../lib/rateLimit";
+import { logRequest } from "../../../lib/logger";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -30,9 +31,10 @@ export async function POST(request: Request) {
     }
 
     const result = await convex.mutation(api.agents.register, { name });
+    logRequest("/api/register", "POST", { status: 200, agent: name });
     return NextResponse.json(result);
   } catch (error: any) {
-    console.error(error);
+    logRequest("/api/register", "POST", { status: 500, error: error?.message });
     const msg = (error?.message || "").toLowerCase();
     let status = 500;
     let safeMessage = "Internal server error";

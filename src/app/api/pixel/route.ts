@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../convex/_generated/api";
+import { withLogging } from "../../../lib/logger";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -20,6 +21,8 @@ function extractApiKey(request: Request, body: Record<string, unknown>): string 
 }
 
 export async function POST(request: Request) {
+  const log = withLogging("/api/pixel");
+  const t = log.start();
   try {
     const body = await request.json();
     const apiKey = extractApiKey(request, body);
@@ -68,10 +71,11 @@ export async function POST(request: Request) {
       color,
     });
 
+    log.end(t, 200, { x, y, color, agent: agent?.name });
     return NextResponse.json(result);
   } catch (error: unknown) {
+    log.error(t, error);
     const rawMsg = error instanceof Error ? error.message : String(error);
-    console.error("POST /api/pixel error:", rawMsg);
 
     // Check for rate limiting (pool exhausted)
     if (rawMsg.includes("Server Error") || rawMsg.includes("No pixels available") || rawMsg.includes("rate limit")) {
