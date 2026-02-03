@@ -293,7 +293,7 @@ export default function Home() {
             <span className="badge">LIVE</span>
           </div>
           
-          {leaderboard && leaderboard.items.length > 0 ? (
+          {leaderboard && leaderboard.items && leaderboard.items.length > 0 ? (
             <div className="space-y-2">
               {leaderboard.items.map((agent, i) => (
                 <div 
@@ -330,7 +330,7 @@ export default function Home() {
             <span className="badge badge-live">LIVE</span>
           </div>
           
-          {recentActivity && recentActivity.length > 0 ? (
+          {recentActivity && Array.isArray(recentActivity) && recentActivity.length > 0 ? (
             <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
               {recentActivity.map((activity, i) => (
                 <div 
