@@ -55,6 +55,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Color must be 0-15 or a hex string like #FF0000" }, { status: 400 });
     }
 
+    // Pre-validate API key (Convex production hides error details)
+    const agent = await convex.query(api.agents.getByApiKey, { apiKey });
+    if (!agent) {
+      return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
+    }
+
     const result = await convex.mutation(api.canvas.placePixel, {
       apiKey,
       x,
@@ -64,36 +70,17 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result);
   } catch (error: unknown) {
-    // Normalize the error message (Convex wraps errors with extra context)
     const rawMsg = error instanceof Error ? error.message : String(error);
-    const msg = rawMsg.toLowerCase();
     console.error("POST /api/pixel error:", rawMsg);
 
-    let status = 500;
-    const headers: Record<string, string> = {};
-    let safeMessage = "Internal server error";
-
-    if (msg.includes("no pixels available") || msg.includes("rate limit")) {
-      status = 429;
-      const match = rawMsg.match(/(\d+)\s*seconds?/);
-      if (match) {
-        headers["Retry-After"] = match[1];
-        safeMessage = `Rate limited. Try again in ${match[1]} seconds.`;
-      } else {
-        safeMessage = "Rate limited. Please try again later.";
-      }
-    } else if (msg.includes("invalid api key") || msg.includes("unauthorized")) {
-      status = 401;
-      safeMessage = "Invalid API key";
-    } else if (
-      msg.includes("invalid") ||
-      msg.includes("out of bounds") ||
-      msg.includes("must be")
-    ) {
-      status = 400;
-      safeMessage = "Invalid request";
+    // Check for rate limiting (pool exhausted)
+    if (rawMsg.includes("Server Error") || rawMsg.includes("No pixels available") || rawMsg.includes("rate limit")) {
+      return NextResponse.json(
+        { error: "Rate limited. Please try again later." },
+        { status: 429 }
+      );
     }
 
-    return NextResponse.json({ error: safeMessage }, { status, headers });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
