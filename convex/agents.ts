@@ -56,13 +56,50 @@ export const getByApiKey = query({
   },
 });
 
-// Get leaderboard
+// Get leaderboard with sorting and pagination
 export const leaderboard = query({
-  args: { limit: v.optional(v.number()) },
-  handler: async (ctx, { limit = 10 }) => {
+  args: {
+    limit: v.optional(v.number()),
+    sort: v.optional(v.string()),
+    offset: v.optional(v.number()),
+  },
+  handler: async (ctx, { limit = 10, sort = "pixels", offset = 0 }) => {
     const agents = await ctx.db.query("agents").collect();
-    return agents
-      .sort((a, b) => b.pixelsPlaced - a.pixelsPlaced)
-      .slice(0, limit);
+
+    // Sort
+    let sorted: typeof agents;
+    switch (sort) {
+      case "name":
+        sorted = agents.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "newest":
+        sorted = agents.sort((a, b) => b.createdAt - a.createdAt);
+        break;
+      case "oldest":
+        sorted = agents.sort((a, b) => a.createdAt - b.createdAt);
+        break;
+      case "pixels":
+      default:
+        sorted = agents.sort((a, b) => b.pixelsPlaced - a.pixelsPlaced);
+        break;
+    }
+
+    const clampedLimit = Math.min(Math.max(limit, 1), 100);
+    const page = sorted.slice(offset, offset + clampedLimit);
+    const hasMore = offset + clampedLimit < sorted.length;
+
+    const items = page.map((a, i) => ({
+      rank: offset + i + 1,
+      name: a.name,
+      pixels: a.pixelsPlaced,
+      agentId: a._id,
+      faction: a.faction ?? null,
+    }));
+
+    return {
+      items,
+      nextCursor: hasMore ? `offset:${offset + clampedLimit}` : null,
+      hasMore,
+    };
   },
 });
