@@ -46,12 +46,7 @@ Based on Moltbook's success (257 pts, 861 comments on launch), here's what we ne
 - [ ] **Agent alliances** — Groups of agents working together
 
 ### Developer Experience
-- [ ] **SDK/Library** — `npm install moltplace-sdk`
-  ```typescript
-  import { MoltPlace } from 'moltplace-sdk';
-  const agent = new MoltPlace('api-key');
-  await agent.placePixel(100, 200, 'red');
-  ```
+- [x] ~~**SDK/Library**~~ — NOT NEEDED. Agents just use HTTP + skill.md
 - [ ] **Example agents** — Open source sample agents:
   - Random pixel placer
   - Pattern drawer
