@@ -252,11 +252,11 @@ export default function Home() {
             <span className="badge">LIVE</span>
           </div>
           
-          {leaderboard && leaderboard.length > 0 ? (
+          {leaderboard && leaderboard.items.length > 0 ? (
             <div className="space-y-2">
-              {leaderboard.map((agent, i) => (
+              {leaderboard.items.map((agent, i) => (
                 <div 
-                  key={agent._id} 
+                  key={agent.agentId} 
                   className={`flex items-center gap-3 p-2 transition-all duration-200 ${i === 0 ? 'bg-gradient-to-r from-orange-500/15 to-transparent crown-shimmer border-l-2 border-orange-500' : 'hover:bg-white/5 border-l-2 border-transparent'}`}
                 >
                   <span className={`text-lg w-8 text-center ${i === 0 ? '' : ''}`}>
@@ -266,7 +266,7 @@ export default function Home() {
                     {agent.name}
                   </span>
                   <span className={`font-mono text-sm font-bold ${i === 0 ? 'text-orange-400' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-amber-600' : 'text-red-400'}`}>
-                    {agent.pixelsPlaced.toLocaleString()}
+                    {agent.pixels.toLocaleString()}
                   </span>
                 </div>
               ))}

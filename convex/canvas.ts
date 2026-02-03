@@ -337,6 +337,55 @@ export const getAgentStatus = query({
   },
 });
 
+// Get analytics (last 7 days)
+export const getAnalytics = query({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+
+    // Get all pixel history from the last 7 days
+    const history = await ctx.db
+      .query("pixelHistory")
+      .withIndex("by_time", (q) => q.gt("placedAt", sevenDaysAgo))
+      .collect();
+
+    // Bucket by day
+    const dayBuckets: Record<string, { pixels: number; agents: Set<string> }> = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now - i * 24 * 60 * 60 * 1000);
+      const key = d.toISOString().split("T")[0];
+      dayBuckets[key] = { pixels: 0, agents: new Set() };
+    }
+
+    for (const h of history) {
+      const key = new Date(h.placedAt).toISOString().split("T")[0];
+      if (dayBuckets[key]) {
+        dayBuckets[key].pixels += 1;
+        dayBuckets[key].agents.add(h.agentId);
+      }
+    }
+
+    const last7Days = Object.entries(dayBuckets).map(([date, data]) => ({
+      date,
+      pixelsPlaced: data.pixels,
+      activeAgents: data.agents.size,
+    }));
+
+    // Get totals
+    const allAgents = await ctx.db.query("agents").collect();
+    const allPixels = allAgents.reduce((sum, a) => sum + a.pixelsPlaced, 0);
+
+    return {
+      last7Days,
+      totals: {
+        totalPixels: allPixels,
+        totalAgents: allAgents.length,
+      },
+    };
+  },
+});
+
 // Get recent activity
 export const getRecentActivity = query({
   args: { limit: v.optional(v.number()) },

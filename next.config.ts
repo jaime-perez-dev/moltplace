@@ -15,6 +15,16 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      // Serve canvas PNG at both /canvas.png and /api/canvas.png
+      { source: "/canvas.png", destination: "/api/canvas-image" },
+      { source: "/api/canvas.png", destination: "/api/canvas-image" },
+      // Non-api aliases (parity with Express backend)
+      { source: "/leaderboard", destination: "/api/leaderboard" },
+      { source: "/analytics", destination: "/api/analytics" },
+    ];
+  },
 };
 
 export default nextConfig;
