@@ -431,4 +431,77 @@ body {
   .scanlines {
     opacity: 0.5;
   }
+
+  /* Canvas fills viewport width on mobile */
+  .canvas-container canvas {
+    max-width: 90vw !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1;
+  }
+
+  /* Bottom control pills stack and shrink */
+  .control-pill {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+    max-width: 95vw;
+    gap: 0.25rem;
+  }
+
+  /* Buttons need min 44px tap target */
+  .zoom-btn,
+  .btn-ghost,
+  .btn-accent {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Tablet breakpoint */
+@media (max-width: 900px) {
+  /* Sidebar overlaps canvas less — narrow it */
+  aside.fixed {
+    width: 15rem;
+  }
+}
+
+/* Phone breakpoint */
+@media (max-width: 430px) {
+  header.fixed {
+    padding: 0.75rem;
+  }
+
+  header h1 {
+    font-size: 1.25rem !important;
+  }
+
+  /* Sidebar goes full-width at bottom on small phones */
+  aside.fixed {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 40vh;
+    overflow-y: auto;
+    flex-direction: column;
+    padding: 0.5rem;
+    z-index: 25;
+    background: rgba(13, 13, 13, 0.95);
+    border-top: 2px solid rgba(229, 57, 53, 0.3);
+  }
+
+  aside.fixed > div {
+    width: 100%;
+  }
+
+  .canvas-container {
+    box-shadow:
+      0 0 0 2px rgba(229, 57, 53, 0.3),
+      4px 4px 0 rgba(0, 0, 0, 0.4);
+  }
 }
