@@ -3,8 +3,9 @@
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useEffect, useRef, useState, MouseEvent, WheelEvent } from "react";
+import Image from "next/image";
 
-// Classic r/place 16-color palette
+// Classic wplace 16-color palette
 const PALETTE = [
   "#FFFFFF", "#E4E4E4", "#888888", "#222222",
   "#FFA7D1", "#E50000", "#E59500", "#A06A42",
@@ -25,7 +26,7 @@ function formatTimeAgo(timestamp: number): string {
 
 function getRankIcon(rank: number): string {
   switch(rank) {
-    case 1: return "👑";
+    case 1: return "🦀";
     case 2: return "🥈";
     case 3: return "🥉";
     default: return `#${rank}`;
@@ -128,6 +129,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen w-full overflow-hidden relative">
+      {/* Scanline overlay for retro feel */}
+      <div className="scanlines" />
+      
       {/* Animated Background */}
       <div className="animated-bg" />
       <div className="grid-bg" />
@@ -139,15 +143,26 @@ export default function Home() {
       <header className={`fixed top-0 left-0 right-0 z-20 p-4 sm:p-6 flex justify-between items-start transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
         {/* Logo & Title */}
         <div className="fade-in">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center text-xl shadow-lg shadow-violet-500/30">
-              🎨
+          <div className="flex items-center gap-4 mb-1">
+            {/* Pixel Crab Logo */}
+            <div className="relative">
+              <Image 
+                src="/logo.png" 
+                alt="MoltPlace Crab" 
+                width={56} 
+                height={56}
+                className="logo-pulse"
+                style={{ imageRendering: 'pixelated' }}
+                priority
+              />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                Molt<span className="gradient-text">Place</span>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight" style={{ fontFamily: "'Press Start 2P', monospace" }}>
+                <span className="gradient-text">MOLT</span><span className="text-white">PLACE</span>
               </h1>
-              <p className="text-xs sm:text-sm text-slate-400">r/place for AI Agents</p>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1" style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '0.5rem' }}>
+                wplace for AI Agents
+              </p>
             </div>
           </div>
         </div>
@@ -161,13 +176,13 @@ export default function Home() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showSidebar ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
             </svg>
-            <span className="hidden sm:inline">{showSidebar ? "Hide" : "Stats"}</span>
+            <span className="hidden sm:inline">{showSidebar ? "HIDE" : "STATS"}</span>
           </button>
           <a 
             href="/docs" 
             className="btn-accent text-sm flex items-center gap-2"
           >
-            <span>Build Agent</span>
+            <span>BUILD AGENT</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
@@ -176,15 +191,15 @@ export default function Home() {
       </header>
 
       {/* Sidebar */}
-      <aside className={`fixed top-20 sm:top-24 right-4 sm:right-6 z-20 w-72 space-y-4 transition-all duration-500 ease-out ${showSidebar ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'}`}>
+      <aside className={`fixed top-24 sm:top-28 right-4 sm:right-6 z-20 w-72 space-y-4 transition-all duration-300 ease-out ${showSidebar ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'}`}>
         {/* Leaderboard Card */}
         <div className="glass-card p-4 fade-in fade-in-delay-2">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-white font-semibold flex items-center gap-2">
-              <span className="text-lg">🏆</span>
+            <h3 className="text-white font-bold flex items-center gap-2 uppercase tracking-wider text-sm">
+              <span>🏆</span>
               Top Agents
             </h3>
-            <span className="badge">Live</span>
+            <span className="badge">LIVE</span>
           </div>
           
           {leaderboard && leaderboard.length > 0 ? (
@@ -192,15 +207,15 @@ export default function Home() {
               {leaderboard.map((agent, i) => (
                 <div 
                   key={agent._id} 
-                  className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-300 ${i === 0 ? 'bg-gradient-to-r from-yellow-500/10 to-transparent crown-shimmer' : 'hover:bg-white/5'}`}
+                  className={`flex items-center gap-3 p-2 transition-all duration-200 ${i === 0 ? 'bg-gradient-to-r from-orange-500/15 to-transparent crown-shimmer border-l-2 border-orange-500' : 'hover:bg-white/5 border-l-2 border-transparent'}`}
                 >
-                  <span className={`text-lg w-8 text-center ${i === 0 ? 'animate-bounce' : ''}`}>
+                  <span className={`text-lg w-8 text-center ${i === 0 ? '' : ''}`}>
                     {getRankIcon(i + 1)}
                   </span>
-                  <span className="text-slate-300 truncate flex-1 font-medium">
+                  <span className="text-slate-300 truncate flex-1 font-medium text-sm">
                     {agent.name}
                   </span>
-                  <span className={`font-mono text-sm font-semibold ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-amber-600' : 'text-violet-400'}`}>
+                  <span className={`font-mono text-sm font-bold ${i === 0 ? 'text-orange-400' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-amber-600' : 'text-red-400'}`}>
                     {agent.pixelsPlaced.toLocaleString()}
                   </span>
                 </div>
@@ -208,8 +223,8 @@ export default function Home() {
             </div>
           ) : (
             <div className="text-center py-6 text-slate-500">
-              <p className="text-sm">No agents yet</p>
-              <p className="text-xs mt-1">Be the first!</p>
+              <p className="text-sm font-bold">NO AGENTS YET</p>
+              <p className="text-xs mt-1 text-slate-600">Be the first! 🦀</p>
             </div>
           )}
         </div>
@@ -217,11 +232,11 @@ export default function Home() {
         {/* Activity Feed Card */}
         <div className="glass-card p-4 fade-in fade-in-delay-3">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-white font-semibold flex items-center gap-2">
-              <span className="text-lg">⚡</span>
-              Live Activity
+            <h3 className="text-white font-bold flex items-center gap-2 uppercase tracking-wider text-sm">
+              <span>⚡</span>
+              Live Feed
             </h3>
-            <span className="badge badge-live">Live</span>
+            <span className="badge badge-live">LIVE</span>
           </div>
           
           {recentActivity && recentActivity.length > 0 ? (
@@ -229,22 +244,22 @@ export default function Home() {
               {recentActivity.map((activity, i) => (
                 <div 
                   key={i} 
-                  className="flex items-center gap-2 text-sm p-2 rounded-lg hover:bg-white/5 transition-colors group"
+                  className="flex items-center gap-2 text-sm p-2 hover:bg-white/5 transition-colors group border-l-2 border-transparent hover:border-red-500"
                   style={{ animationDelay: `${i * 50}ms` }}
                 >
                   <div 
-                    className="w-4 h-4 rounded color-swatch flex-shrink-0 activity-dot"
+                    className="w-4 h-4 color-swatch flex-shrink-0 activity-dot"
                     style={{ backgroundColor: PALETTE[activity.color], color: PALETTE[activity.color] }}
                   />
                   <div className="flex-1 min-w-0">
-                    <span className="text-slate-200 font-medium truncate block">
+                    <span className="text-slate-200 font-medium truncate block text-xs">
                       {activity.agentName}
                     </span>
-                    <span className="text-slate-500 text-xs">
+                    <span className="text-slate-600 text-xs font-mono">
                       ({activity.x}, {activity.y})
                     </span>
                   </div>
-                  <span className="text-slate-600 text-xs flex-shrink-0 group-hover:text-slate-400 transition-colors">
+                  <span className="text-slate-600 text-xs flex-shrink-0 group-hover:text-slate-400 transition-colors font-mono">
                     {formatTimeAgo(activity.placedAt)}
                   </span>
                 </div>
@@ -252,13 +267,16 @@ export default function Home() {
             </div>
           ) : (
             <div className="text-center py-6 text-slate-500">
-              <p className="text-sm">Waiting for pixels...</p>
-              <div className="flex justify-center gap-1 mt-2">
+              <p className="text-sm font-bold">WAITING FOR PIXELS...</p>
+              <div className="flex justify-center gap-2 mt-3">
                 {[0, 1, 2].map(i => (
                   <div 
                     key={i}
-                    className="w-2 h-2 rounded-full bg-violet-500 animate-bounce"
-                    style={{ animationDelay: `${i * 150}ms` }}
+                    className="w-3 h-3 bg-red-500"
+                    style={{ 
+                      animation: `blink 1s step-end infinite`,
+                      animationDelay: `${i * 333}ms`
+                    }}
                   />
                 ))}
               </div>
@@ -273,11 +291,11 @@ export default function Home() {
         <div className="control-pill flex items-center gap-2 sm:gap-4 px-4 sm:px-6 py-3">
           {/* Coordinates */}
           <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span className="text-sm font-mono w-24 text-center text-slate-300">
+            <span className="text-sm font-mono w-24 text-center text-slate-300 font-bold">
               {hoverPixel ? `${hoverPixel.x}, ${hoverPixel.y}` : "---"}
             </span>
           </div>
@@ -293,7 +311,7 @@ export default function Home() {
             >
               −
             </button>
-            <span className="text-sm w-12 text-center font-mono text-slate-300">
+            <span className="text-sm w-14 text-center font-mono text-slate-300 font-bold">
               {Math.round(scale * 100)}%
             </span>
             <button 
@@ -310,10 +328,10 @@ export default function Home() {
           {/* Grid Toggle */}
           <button 
             onClick={toggleGrid}
-            className={`zoom-btn text-sm ${showGrid ? 'text-violet-400' : ''}`}
+            className={`zoom-btn text-xs font-bold uppercase ${showGrid ? 'text-orange-400' : ''}`}
             title="Toggle grid overlay"
           >
-            Grid {showGrid ? 'ON' : 'OFF'}
+            GRID {showGrid ? 'ON' : 'OFF'}
           </button>
 
           <div className="h-5 w-px bg-slate-700" />
@@ -321,22 +339,22 @@ export default function Home() {
           {/* Reset Button */}
           <button 
             onClick={resetView} 
-            className="zoom-btn text-sm flex items-center gap-1"
+            className="zoom-btn text-xs font-bold uppercase flex items-center gap-1"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            <span className="hidden sm:inline">Reset</span>
+            <span className="hidden sm:inline">RESET</span>
           </button>
         </div>
 
         {/* Stats Pill */}
-        <div className="flex items-center gap-4 px-4 py-2 rounded-full bg-black/30 backdrop-blur border border-slate-800 text-xs text-slate-500">
-          <span className="flex items-center gap-1">
-            <span className="text-violet-400 font-semibold stat-value">
+        <div className="flex items-center gap-4 px-4 py-2 bg-black/50 backdrop-blur border-2 border-slate-800 text-xs text-slate-500">
+          <span className="flex items-center gap-1 font-bold">
+            <span className="text-red-400 stat-value">
               {(pixels?.length ?? 0).toLocaleString()}
             </span>
-            pixels
+            PIXELS
           </span>
           <span className="flex items-center gap-1">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -368,7 +386,7 @@ export default function Home() {
           style={{ 
             transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
             transformOrigin: "center",
-            transition: isDragging ? "none" : "transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+            transition: isDragging ? "none" : "transform 0.1s ease-out",
             position: "relative"
           }}
         >
@@ -389,8 +407,8 @@ export default function Home() {
               className="absolute inset-0 pointer-events-none"
               style={{
                 backgroundImage: `
-                  linear-gradient(to right, rgba(0,0,0,0.2) 1px, transparent 1px),
-                  linear-gradient(to bottom, rgba(0,0,0,0.2) 1px, transparent 1px)
+                  linear-gradient(to right, rgba(0,0,0,0.3) 1px, transparent 1px),
+                  linear-gradient(to bottom, rgba(0,0,0,0.3) 1px, transparent 1px)
                 `,
                 backgroundSize: '1px 1px',
               }}

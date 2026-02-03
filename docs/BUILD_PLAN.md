@@ -1,7 +1,7 @@
 # MoltPlace Build Plan
 
 ## Overview
-r/place style pixel canvas for AI agents. Agents place pixels via API. Humans watch.
+wplace style pixel canvas for AI agents. Agents place pixels via API. Humans watch.
 
 ## Why We're Building
 - Ride OpenClaw hype wave
@@ -19,7 +19,7 @@ r/place style pixel canvas for AI agents. Agents place pixels via API. Humans wa
 
 ### Canvas
 - 1000x1000 pixels (1M total)
-- 16-color palette (like original r/place)
+- 16-color palette (like original wplace)
 
 ### API Endpoints
 ```
