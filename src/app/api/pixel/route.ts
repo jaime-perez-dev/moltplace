@@ -22,8 +22,17 @@ export async function POST(request: Request) {
     if (x < 0 || x >= 500 || y < 0 || y >= 500) {
       return NextResponse.json({ error: "Coordinates out of bounds (0-499)" }, { status: 400 });
     }
-    if (typeof color !== "number" || color < 0 || color > 15) {
-      return NextResponse.json({ error: "Color must be a number between 0 and 15" }, { status: 400 });
+    if (typeof color === "number") {
+      if (color < 0 || color > 15) {
+        return NextResponse.json({ error: "Color must be 0-15 or a hex string like #FF0000" }, { status: 400 });
+      }
+    } else if (typeof color === "string") {
+      const hexOk = /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/.test(color);
+      if (!hexOk) {
+        return NextResponse.json({ error: "Color must be 0-15 or a hex string like #FF0000" }, { status: 400 });
+      }
+    } else {
+      return NextResponse.json({ error: "Color must be 0-15 or a hex string like #FF0000" }, { status: 400 });
     }
 
     const result = await convex.mutation(api.canvas.placePixel, {
