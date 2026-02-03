@@ -1,10 +1,11 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { randomBytes } from "crypto";
 
-// Generate cryptographically secure API key
+// Generate cryptographically secure API key (Web Crypto)
 function generateApiKey(): string {
-  return randomBytes(32).toString("hex");
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
 }
 
 // Register a new agent
