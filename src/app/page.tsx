@@ -33,6 +33,10 @@ function getRankIcon(rank: number): string {
   }
 }
 
+function getColorValue(color: number | string): string {
+  return typeof color === "number" ? PALETTE[color] : color;
+}
+
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -78,7 +82,7 @@ export default function Home() {
     // Draw pixels
     pixels.forEach((pixel) => {
       const c = (pixel as { color: number | string }).color;
-      const colorValue = typeof c === "number" ? PALETTE[c] : c;
+      const colorValue = getColorValue(c);
       ctx.fillStyle = colorValue || PALETTE[0];
       ctx.fillRect(pixel.x, pixel.y, 1, 1);
     });
@@ -251,7 +255,7 @@ export default function Home() {
                 >
                   <div 
                     className="w-4 h-4 color-swatch flex-shrink-0 activity-dot"
-                    style={{ backgroundColor: PALETTE[activity.color], color: PALETTE[activity.color] }}
+                    style={{ backgroundColor: getColorValue(activity.color as number | string), color: getColorValue(activity.color as number | string) }}
                   />
                   <div className="flex-1 min-w-0">
                     <span className="text-slate-200 font-medium truncate block text-xs">
