@@ -174,6 +174,32 @@ export const getCanvas = query({
   },
 });
 
+// Get canvas updates since a timestamp
+export const getCanvasSince = query({
+  args: { since: v.number(), limit: v.optional(v.number()) },
+  handler: async (ctx, { since, limit = 10000 }) => {
+    const history = await ctx.db
+      .query("pixelHistory")
+      .withIndex("by_time", (q) => q.gt("placedAt", since))
+      .order("asc")
+      .take(limit);
+    return history;
+  },
+});
+
+// Get canvas metadata (for caching)
+export const getCanvasMeta = query({
+  args: {},
+  handler: async (ctx) => {
+    const latest = await ctx.db
+      .query("pixelHistory")
+      .withIndex("by_time")
+      .order("desc")
+      .take(1);
+    return { lastPlacedAt: latest[0]?.placedAt ?? 0 };
+  },
+});
+
 // Get canvas dimensions (from config or defaults)
 export const getDimensions = query({
   args: {},

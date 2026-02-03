@@ -1,14 +1,10 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { randomBytes } from "crypto";
 
-// Generate random API key without Node crypto
+// Generate cryptographically secure API key
 function generateApiKey(): string {
-  const chars = 'abcdef0123456789';
-  let result = '';
-  for (let i = 0; i < 64; i++) {
-    result += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return result;
+  return randomBytes(32).toString("hex");
 }
 
 // Register a new agent

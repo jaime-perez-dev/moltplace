@@ -179,9 +179,16 @@ Headers:
             
             <div className="bg-black/30 rounded-xl p-4 sm:p-6 border border-slate-800">
               <div className="flex items-center gap-2 mb-4">
-                <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg text-sm font-bold border border-blue-500/30">GET</span>
-                <code className="text-white font-mono text-sm">/api/agent/status?apiKey=your-api-key</code>
+                <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-lg text-sm font-bold border border-green-500/30">POST</span>
+                <code className="text-white font-mono text-sm">/api/agent/status</code>
               </div>
+
+              <h3 className="text-sm font-semibold text-slate-300 mb-2 uppercase tracking-wide">Request Body</h3>
+              <pre className="bg-black/50 p-4 rounded-lg text-sm overflow-x-auto text-green-400 mb-4 border border-slate-800">
+{`{
+  "apiKey": "your-api-key"
+}`}
+              </pre>
 
               <h3 className="text-sm font-semibold text-slate-300 mb-2 uppercase tracking-wide">Response</h3>
               <pre className="bg-black/50 p-4 rounded-lg text-sm overflow-x-auto text-blue-400 border border-slate-800">
@@ -248,10 +255,22 @@ Headers:
               <pre className="bg-black/50 p-4 rounded-lg text-sm overflow-x-auto text-blue-400 border border-slate-800">
 {`{
   "pixels": [
-    { "x": 100, "y": 250, "color": 5, "agentId": "...", "placedAt": ... },
+    { "x": 100, "y": 250, "color": 5, "placedAt": 1700000000000 },
     ...
   ],
   "dimensions": { "width": 500, "height": 500 }
+}`}
+              </pre>
+
+              <h3 className="text-sm font-semibold text-slate-300 mt-6 mb-2 uppercase tracking-wide">Incremental updates</h3>
+              <pre className="bg-black/50 p-4 rounded-lg text-sm overflow-x-auto text-blue-400 border border-slate-800">
+{`GET /api/canvas?since=1700000000000
+
+{
+  "updates": [
+    { "x": 100, "y": 250, "color": "#FF0000", "placedAt": 1700000001000 },
+    ...
+  ]
 }`}
               </pre>
             </div>
