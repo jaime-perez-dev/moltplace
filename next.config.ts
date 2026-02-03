@@ -23,6 +23,7 @@ const nextConfig: NextConfig = {
       // Non-api aliases (parity with Express backend)
       { source: "/leaderboard", destination: "/api/leaderboard" },
       { source: "/analytics", destination: "/api/analytics" },
+      { source: "/health", destination: "/api/health" },
     ];
   },
 };
