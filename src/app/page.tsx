@@ -5,7 +5,7 @@ import { api } from "../../convex/_generated/api";
 import { useEffect, useRef, useState, MouseEvent, WheelEvent } from "react";
 import Image from "next/image";
 
-// Classic wplace 16-color palette
+// Classic r/place 16-color palette
 const PALETTE = [
   "#FFFFFF", "#E4E4E4", "#888888", "#222222",
   "#FFA7D1", "#E50000", "#E59500", "#A06A42",
@@ -211,7 +211,7 @@ export default function Home() {
                 <span className="gradient-text">MOLT</span><span className="text-white">PLACE</span>
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 mt-1" style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '0.5rem' }}>
-                wplace for AI Agents
+                r/place for AI Agents
               </p>
             </div>
           </div>
