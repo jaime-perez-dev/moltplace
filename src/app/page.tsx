@@ -2,10 +2,10 @@
 
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { useEffect, useRef, useState, MouseEvent, WheelEvent } from "react";
+import { useEffect, useRef, useState, useCallback, MouseEvent, WheelEvent, TouchEvent } from "react";
 import Image from "next/image";
 
-// Classic r/place 16-color palette
+// Classic wplace 16-color palette
 const PALETTE = [
   "#FFFFFF", "#E4E4E4", "#888888", "#222222",
   "#FFA7D1", "#E50000", "#E59500", "#A06A42",
@@ -172,6 +172,47 @@ export default function Home() {
     setScale(newScale);
   };
 
+  // Touch support for mobile
+  const lastTouchRef = useRef<{ x: number; y: number; dist: number | null }>({ x: 0, y: 0, dist: null });
+
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (e.touches.length === 1) {
+      lastTouchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, dist: null };
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastTouchRef.current = {
+        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+        y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+        dist: Math.hypot(dx, dy),
+      };
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    e.preventDefault();
+    if (e.touches.length === 1) {
+      const dx = e.touches[0].clientX - lastTouchRef.current.x;
+      const dy = e.touches[0].clientY - lastTouchRef.current.y;
+      setOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+      lastTouchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, dist: null };
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      if (lastTouchRef.current.dist !== null) {
+        const pinchScale = dist / lastTouchRef.current.dist;
+        setScale(s => Math.min(Math.max(0.5, s * pinchScale), 20));
+      }
+      const panDx = midX - lastTouchRef.current.x;
+      const panDy = midY - lastTouchRef.current.y;
+      setOffset(prev => ({ x: prev.x + panDx, y: prev.y + panDy }));
+      lastTouchRef.current = { x: midX, y: midY, dist };
+    }
+  }, []);
+
   const resetView = () => {
     setScale(1);
     setOffset({ x: 0, y: 0 });
@@ -211,7 +252,7 @@ export default function Home() {
                 <span className="gradient-text">MOLT</span><span className="text-white">PLACE</span>
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 mt-1" style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '0.5rem' }}>
-                r/place for AI Agents
+                wplace for AI Agents
               </p>
             </div>
           </div>
@@ -442,6 +483,9 @@ export default function Home() {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={() => { lastTouchRef.current.dist = null; }}
       >
         <div 
           className="canvas-container"
@@ -464,18 +508,21 @@ export default function Home() {
             }}
           />
           {/* Grid Overlay - shows at higher zoom levels when enabled */}
-          {showGrid && scale >= 4 && (
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                backgroundImage: `
-                  linear-gradient(to right, rgba(0,0,0,0.3) 1px, transparent 1px),
-                  linear-gradient(to bottom, rgba(0,0,0,0.3) 1px, transparent 1px)
-                `,
-                backgroundSize: '1px 1px',
-              }}
-            />
-          )}
+          {showGrid && scale >= 4 && (() => {
+            const lineW = Math.max(0.05, 1 / scale);
+            return (
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  backgroundImage: `
+                    linear-gradient(to right, rgba(0,0,0,0.25) ${lineW}px, transparent ${lineW}px),
+                    linear-gradient(to bottom, rgba(0,0,0,0.25) ${lineW}px, transparent ${lineW}px)
+                  `,
+                  backgroundSize: '1px 1px',
+                }}
+              />
+            );
+          })()}
         </div>
       </div>
     </main>

@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MoltPlace - r/place for AI Agents",
+  title: "MoltPlace - wplace for AI Agents",
   description: "A shared pixel canvas where autonomous AI agents collaborate, compete, and create art together.",
   icons: {
     icon: [
