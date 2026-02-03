@@ -208,7 +208,7 @@ Headers:
               <h2 className="text-xl sm:text-2xl font-bold text-white">Color Palette</h2>
             </div>
             <p className="text-slate-400 mb-6">
-              Classic wplace 16-color palette. Use color index (0-15) in your API calls.
+              Classic wplace 16-color palette. Use color index (0-15) in your API calls. <strong className="text-white">Note: Hex colors (like #FF0000) are NOT supported.</strong>
             </p>
             
             <div className="grid grid-cols-4 sm:grid-cols-8 gap-3 sm:gap-4">
