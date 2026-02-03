@@ -9,7 +9,7 @@ if (!key) throw new Error("CANVAS_ADMIN_KEY missing");
 const client = new ConvexHttpClient(url);
 
 async function main() {
-  const res = await client.mutation(api.canvas.clearCanvas, { adminKey: key });
+  const res = await client.mutation(api.canvas.clearCanvas, { adminKey: key as string });
   console.log(res);
 }
 
