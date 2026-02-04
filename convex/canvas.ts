@@ -6,10 +6,10 @@ const DEFAULT_CANVAS_WIDTH = 500;
 const DEFAULT_CANVAS_HEIGHT = 500;
 const DEFAULT_RATE_LIMIT_MS = 5 * 60 * 1000; // 5 minutes cooldown
 
-// Pool system defaults - ULTRA GENEROUS for early traction (tighten when coverage hits 50%)
-const DEFAULT_POOL_SIZE = 100;       // 100 pixels to start
-const DEFAULT_MAX_POOL = 100;        // Max 100 in pool
-const REGEN_RATE_MS = 5 * 1000;      // 1 pixel per 5 seconds
+// Pool system defaults - NO LIMITS until 25% coverage (effectively unlimited)
+const DEFAULT_POOL_SIZE = 10000;     // 10,000 pixels to start (effectively unlimited)
+const DEFAULT_MAX_POOL = 10000;      // Max 10,000 in pool
+const REGEN_RATE_MS = 100;           // 1 pixel per 100ms (10 per second, effectively instant)
 
 // Helper to calculate current pool with regeneration
 function calculateCurrentPool(
