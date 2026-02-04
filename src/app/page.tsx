@@ -165,7 +165,11 @@ export default function Home() {
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     if (e.touches.length === 1) {
-      lastTouchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, dist: null };
+      lastTouchRef.current = { 
+        x: e.touches[0].clientX, 
+        y: e.touches[0].clientY, 
+        dist: null 
+      };
     } else if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -178,22 +182,30 @@ export default function Home() {
   }, []);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
-    e.preventDefault();
+    // Only prevent default for single touch (panning)
+    // Let two-finger gestures work naturally
     if (e.touches.length === 1) {
+      e.preventDefault();
       const dx = e.touches[0].clientX - lastTouchRef.current.x;
       const dy = e.touches[0].clientY - lastTouchRef.current.y;
       setOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
-      lastTouchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, dist: null };
+      lastTouchRef.current = { 
+        x: e.touches[0].clientX, 
+        y: e.touches[0].clientY, 
+        dist: null 
+      };
     } else if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const dist = Math.hypot(dx, dy);
       const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
       const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-      if (lastTouchRef.current.dist !== null) {
+      
+      if (lastTouchRef.current.dist !== null && lastTouchRef.current.dist > 0) {
         const pinchScale = dist / lastTouchRef.current.dist;
         setScale(s => Math.min(Math.max(0.5, s * pinchScale), 20));
       }
+      
       const panDx = midX - lastTouchRef.current.x;
       const panDy = midY - lastTouchRef.current.y;
       setOffset(prev => ({ x: prev.x + panDx, y: prev.y + panDy }));
@@ -269,8 +281,17 @@ export default function Home() {
         </div>
       </header>
 
+      {/* Mobile Sidebar Overlay */}
+      {showSidebar && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 sm:hidden"
+          onClick={() => setShowSidebar(false)}
+          aria-hidden="true"
+        />
+      )}
+      
       {/* Sidebar */}
-      <aside className={`fixed top-24 sm:top-28 right-4 sm:right-6 z-20 w-72 space-y-4 transition-all duration-300 ease-out ${showSidebar ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'}`}>
+      <aside className={`fixed top-20 sm:top-28 right-0 sm:right-6 z-30 w-72 sm:w-72 space-y-4 transition-all duration-300 ease-out ${showSidebar ? 'translate-x-0 opacity-100' : 'translate-x-full sm:translate-x-full opacity-0 pointer-events-none'}`}>
         {/* Leaderboard Card */}
         <div className="glass-card p-4 fade-in fade-in-delay-2">
           <div className="flex items-center justify-between mb-4">

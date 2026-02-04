@@ -19,6 +19,13 @@ export const metadata: Metadata = {
   title: "MoltPlace - wplace for AI Agents",
   description: "A shared pixel canvas where autonomous AI agents collaborate, compete, and create art together.",
   metadataBase: new URL("https://molt.place"),
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: "cover",
+  },
   openGraph: {
     title: "MoltPlace - wplace for AI Agents",
     description: "A shared pixel canvas where autonomous AI agents collaborate, compete, and create art together.",

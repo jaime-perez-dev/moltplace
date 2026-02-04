@@ -246,14 +246,20 @@ body {
   position: relative;
   border-radius: 0;
   overflow: hidden;
-  width: min(500px, 90vw, 90vh);
-  height: min(500px, 90vw, 90vh);
+  width: min(500px, 95vw, 80vh);
+  height: min(500px, 95vw, 80vh);
+  max-width: 500px;
+  max-height: 500px;
   aspect-ratio: 1 / 1;
   box-shadow: 
     0 0 0 4px rgba(229, 57, 53, 0.4),
     8px 8px 0 rgba(0, 0, 0, 0.5),
     var(--glow-intense);
   transition: box-shadow 0.3s ease;
+  touch-action: none; /* Prevent browser handling of touch gestures */
+  -webkit-touch-callout: none; /* Prevent callout menu on long press */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .canvas-container:hover {
@@ -436,6 +442,13 @@ body {
   }
 
   /* Canvas scales with container on mobile */
+  .canvas-container {
+    width: min(500px, 92vw, 70vh);
+    height: min(500px, 92vw, 70vh);
+    box-shadow:
+      0 0 0 2px rgba(229, 57, 53, 0.3),
+      4px 4px 0 rgba(0, 0, 0, 0.4);
+  }
 
   /* Bottom control pills stack and shrink */
   .control-pill {
@@ -444,6 +457,7 @@ body {
     padding: 0.5rem 0.75rem;
     max-width: 95vw;
     gap: 0.25rem;
+    font-size: 0.75rem;
   }
 
   /* Buttons need min 44px tap target */
@@ -456,6 +470,18 @@ body {
     align-items: center;
     justify-content: center;
   }
+  
+  /* Smaller text on mobile */
+  .text-xs {
+    font-size: 0.65rem;
+  }
+  
+  /* Hide some elements on very small screens */
+  @media (max-width: 380px) {
+    .hidden-xxs {
+      display: none !important;
+    }
+  }
 }
 
 /* Tablet breakpoint */
@@ -467,39 +493,73 @@ body {
 }
 
 /* Phone breakpoint */
-@media (max-width: 430px) {
+@media (max-width: 640px) {
   header.fixed {
-    padding: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    z-index: 30;
   }
 
   header h1 {
-    font-size: 1.25rem !important;
+    font-size: 1rem !important;
+  }
+  
+  header p {
+    font-size: 0.4rem !important;
+  }
+  
+  /* Logo smaller on mobile */
+  header img {
+    width: 40px !important;
+    height: 40px !important;
   }
 
-  /* Sidebar goes full-width at bottom on small phones */
+  /* Sidebar as overlay from right on mobile - fixed positioning */
   aside.fixed {
-    position: fixed;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-height: 40vh;
-    overflow-y: auto;
-    flex-direction: column;
-    padding: 0.5rem;
-    z-index: 25;
-    background: rgba(13, 13, 13, 0.95);
-    border-top: 2px solid rgba(229, 57, 53, 0.3);
+    position: fixed !important;
+    top: 5rem !important;
+    right: 0 !important;
+    left: auto !important;
+    bottom: auto !important;
+    width: 280px !important;
+    max-width: 80vw !important;
+    max-height: calc(100vh - 7rem) !important;
+    overflow-y: auto !important;
+    padding: 0.75rem !important;
+    z-index: 35 !important;
+    background: rgba(13, 13, 13, 0.98) !important;
+    border-left: 2px solid rgba(229, 57, 53, 0.3) !important;
+    border-top: none !important;
+    border-radius: 0 !important;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+  }
+  
+  aside.fixed.translate-x-0 {
+    transform: translateX(0) !important;
   }
 
   aside.fixed > div {
     width: 100%;
   }
-
+  
+  /* Canvas centered with proper sizing */
   .canvas-container {
+    width: min(500px, 90vw, 65vh);
+    height: min(500px, 90vw, 65vh);
     box-shadow:
       0 0 0 2px rgba(229, 57, 53, 0.3),
       4px 4px 0 rgba(0, 0, 0, 0.4);
+  }
+  
+  /* Bottom controls stack better */
+  .fixed.bottom-6 {
+    bottom: 0.5rem;
+  }
+  
+  /* Stats pills smaller */
+  .control-pill + div,
+  .control-pill + div + div {
+    font-size: 0.6rem;
+    padding: 0.25rem 0.5rem;
   }
 }
