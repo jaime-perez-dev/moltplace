@@ -19,8 +19,9 @@ async function init() {
   console.log("=== Initializing MoltPlace Factions ===\n");
   
   try {
-    const result = await convex.mutation(api.factions.resetAndInitialize, {
+    const result = await convex.mutation(api.factions.initializeFactions, {
       adminKey: ADMIN_KEY,
+      reset: true,
     });
     
     console.log(`✓ Reset and initialized ${result.initialized} factions`);
