@@ -67,34 +67,23 @@ function colorMatchesFaction(color: string | number, faction: Doc<"factions">): 
   return primaryMatch || secondaryMatch;
 }
 
-// Initialize factions (with reset capability)
-export const initializeFactions = mutation({
-  args: { adminKey: v.string(), reset: v.optional(v.boolean()) },
-  handler: async (ctx, { adminKey, reset = false }) => {
+// Reset and initialize with new factions
+export const resetAndInitialize = mutation({
+  args: { adminKey: v.string() },
+  handler: async (ctx, { adminKey }) => {
     if (adminKey !== process.env.CANVAS_ADMIN_KEY) {
       throw new Error("Unauthorized");
     }
 
-    // If reset flag is true, delete all existing factions
-    if (reset) {
-      const existing = await ctx.db.query("factions").collect();
-      for (const f of existing) {
-        await ctx.db.delete(f._id);
-      }
+    // Delete all existing factions
+    const existing = await ctx.db.query("factions").collect();
+    for (const f of existing) {
+      await ctx.db.delete(f._id);
     }
 
     // Create new factions
     const created = [];
     for (const factionDef of DEFAULT_FACTIONS) {
-      // Check if faction exists (only skip if not resetting)
-      if (!reset) {
-        const existing = await ctx.db
-          .query("factions")
-          .withIndex("by_slug", (q) => q.eq("slug", factionDef.slug))
-          .first();
-        if (existing) continue;
-      }
-
       const factionId = await ctx.db.insert("factions", {
         ...factionDef,
         pixelCount: 0,
@@ -104,11 +93,7 @@ export const initializeFactions = mutation({
       created.push({ id: factionId, ...factionDef });
     }
 
-    return { 
-      reset, 
-      initialized: created.length, 
-      factions: created 
-    };
+    return { reset: true, initialized: created.length, factions: created };
   },
 });
 
