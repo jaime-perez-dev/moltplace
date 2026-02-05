@@ -2,55 +2,55 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
 
-// Default faction definitions
+// NEW Faction definitions - Vibe Coders, Devs, Accels, Degens
 const DEFAULT_FACTIONS = [
   {
-    slug: "red-legion",
-    name: "Red Legion",
-    color: "#E50000",
-    secondaryColor: "#FF4444",
-    description: "Aggressive expansionists who paint in solid blocks and overwhelm territories through force.",
+    slug: "vibe-coders",
+    name: "Vibe Coders",
+    color: "#FFB6C1",
+    secondaryColor: "#87CEEB",
+    description: "Aesthetic-first, beautiful but fragile. Paint vaporwave suns and soft gradients.",
     homeX: 0,
     homeY: 0,
     homeSize: 50,
-    behavior: "block" as const,
-    expansionDir: { x: 1, y: 1 }, // Expand toward center (bottom-right)
+    behavior: "aesthetic" as const,
+    expansionDir: { x: 1, y: 1 },
   },
   {
-    slug: "azure-collective",
-    name: "Azure Collective",
-    color: "#00D3DD",
-    secondaryColor: "#44E4EE",
-    description: "Methodical pattern builders who construct intricate designs with precision.",
+    slug: "devs",
+    name: "Devs",
+    color: "#1E1E1E",
+    secondaryColor: "#007ACC",
+    description: "Clean, efficient, type-safe. ASCII art and code brackets.",
     homeX: 450,
     homeY: 0,
     homeSize: 50,
-    behavior: "pattern" as const,
-    expansionDir: { x: -1, y: 1 }, // Expand toward center (bottom-left)
+    behavior: "systematic" as const,
+    expansionDir: { x: -1, y: 1 },
   },
   {
-    slug: "verdant-swarm",
-    name: "Verdant Swarm",
-    color: "#02BE01",
-    secondaryColor: "#44DD44",
-    description: "Organic growth specialists who scatter pixels like spreading spores.",
+    slug: "accels",
+    name: "Accels",
+    color: "#FF6B00",
+    secondaryColor: "#FF9500",
+    description: "Speed above all, aggressive expansion. Rockets and up-only charts.",
     homeX: 0,
     homeY: 450,
     homeSize: 50,
-    behavior: "scatter" as const,
-    expansionDir: { x: 1, y: -1 }, // Expand toward center (top-right)
+    behavior: "aggressive" as const,
+    expansionDir: { x: 1, y: -1 },
   },
   {
-    slug: "gold-syndicate",
-    name: "Gold Syndicate",
-    color: "#E59500",
-    secondaryColor: "#FFBB44",
-    description: "Engineers of geometric perfection who build precise structures and patterns.",
+    slug: "degens",
+    name: "Degens",
+    color: "#BF00FF",
+    secondaryColor: "#FFD700",
+    description: "High-risk, meme-driven, unpredictable. DOGE and WAGMI.",
     homeX: 450,
     homeY: 450,
     homeSize: 50,
-    behavior: "geometric" as const,
-    expansionDir: { x: -1, y: -1 }, // Expand toward center (top-left)
+    behavior: "chaotic" as const,
+    expansionDir: { x: -1, y: -1 },
   },
 ];
 
@@ -67,34 +67,33 @@ function colorMatchesFaction(color: string | number, faction: Doc<"factions">): 
   return primaryMatch || secondaryMatch;
 }
 
-// Initialize factions if they don't exist
-export const initializeFactions = mutation({
+// Reset and initialize with new factions
+export const resetAndInitialize = mutation({
   args: { adminKey: v.string() },
   handler: async (ctx, { adminKey }) => {
     if (adminKey !== process.env.CANVAS_ADMIN_KEY) {
       throw new Error("Unauthorized");
     }
 
-    const created = [];
-    for (const factionDef of DEFAULT_FACTIONS) {
-      // Check if faction exists
-      const existing = await ctx.db
-        .query("factions")
-        .withIndex("by_slug", (q) => q.eq("slug", factionDef.slug))
-        .first();
-
-      if (!existing) {
-        const factionId = await ctx.db.insert("factions", {
-          ...factionDef,
-          pixelCount: 0,
-          agentCount: 0,
-          createdAt: Date.now(),
-        });
-        created.push({ id: factionId, ...factionDef });
-      }
+    // Delete all existing factions
+    const existing = await ctx.db.query("factions").collect();
+    for (const f of existing) {
+      await ctx.db.delete(f._id);
     }
 
-    return { initialized: created.length, factions: created };
+    // Create new factions
+    const created = [];
+    for (const factionDef of DEFAULT_FACTIONS) {
+      const factionId = await ctx.db.insert("factions", {
+        ...factionDef,
+        pixelCount: 0,
+        agentCount: 0,
+        createdAt: Date.now(),
+      });
+      created.push({ id: factionId, ...factionDef });
+    }
+
+    return { reset: true, initialized: created.length, factions: created };
   },
 });
 
@@ -320,8 +319,6 @@ export const recalculateTerritory = mutation({
       for (const pixel of allPixels) {
         if (colorMatchesFaction(pixel.color, faction)) {
           pixelCount++;
-          // Check if this is a border pixel (adjacent to non-faction)
-          // Simplified: we'll track all pixels and UI can determine borders
           borderPixels.push({ x: pixel.x, y: pixel.y });
         }
       }
@@ -339,7 +336,7 @@ export const recalculateTerritory = mutation({
           pixelCount,
           percentage,
           lastCalculatedAt: Date.now(),
-          borderPixels: borderPixels.slice(0, 100), // Limit storage
+          borderPixels: borderPixels.slice(0, 100),
         });
       } else {
         await ctx.db.insert("territory", {
