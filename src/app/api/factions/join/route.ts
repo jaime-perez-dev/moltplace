@@ -1,38 +1,38 @@
-import { NextResponse } from "next/server";
-import { ConvexHttpClient } from "convex/browser";
-import { api } from "../../../../convex/_generated/api";
+import { NextRequest, NextResponse } from "next/server";
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL;
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { apiKey, factionSlug } = body;
-
+    
     if (!apiKey || !factionSlug) {
       return NextResponse.json(
-        { error: "apiKey and factionSlug are required" },
+        { error: "Missing apiKey or factionSlug" },
         { status: 400 }
       );
     }
-
-    const result = await convex.mutation(api.factions.joinFaction, {
-      apiKey,
-      factionSlug,
+    
+    const response = await fetch(`${CONVEX_URL}/api/mutation`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        path: "factions:joinFaction",
+        args: { apiKey, factionSlug }
+      })
     });
-
+    
+    if (!response.ok) {
+      throw new Error(`Convex API error: ${response.status}`);
+    }
+    
+    const result = await response.json();
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("Error joining faction:", error);
-    const msg = error?.message || "";
-    if (msg.includes("Invalid API key")) {
-      return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
-    }
-    if (msg.includes("Faction not found")) {
-      return NextResponse.json({ error: "Faction not found" }, { status: 404 });
-    }
     return NextResponse.json(
-      { error: "Failed to join faction" },
+      { error: "Failed to join faction", details: error.message },
       { status: 500 }
     );
   }
