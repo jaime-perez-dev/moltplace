@@ -10,6 +10,7 @@
 
 import type * as agents from "../agents.js";
 import type * as canvas from "../canvas.js";
+import type * as factions from "../factions.js";
 
 import type {
   ApiFromModules,
@@ -20,6 +21,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   agents: typeof agents;
   canvas: typeof canvas;
+  factions: typeof factions;
 }>;
 
 /**

@@ -93,7 +93,7 @@ export const leaderboard = query({
       name: a.name,
       pixels: a.pixelsPlaced,
       agentId: a._id,
-      faction: a.faction ?? null,
+      faction: a.factionId ?? null,
     }));
 
     return {

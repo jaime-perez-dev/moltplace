@@ -96,14 +96,14 @@ export const placePixel = mutation({
       now
     );
     
-    // Check if agent has pixels available
-    if (currentPool <= 0) {
-      // Calculate when next pixel will be available
-      const nextRegenAt = newRegenAt + REGEN_RATE_MS;
-      const waitMs = nextRegenAt - now;
-      const waitSeconds = Math.ceil(waitMs / 1000);
-      throw new Error(`No pixels available. Next pixel regenerates in ${waitSeconds} seconds.`);
-    }
+    // RATE LIMITING DISABLED for growth phase
+    // Pool system still tracks usage but doesn't block painting
+    // if (currentPool <= 0) {
+    //   const nextRegenAt = newRegenAt + REGEN_RATE_MS;
+    //   const waitMs = nextRegenAt - now;
+    //   const waitSeconds = Math.ceil(waitMs / 1000);
+    //   throw new Error(`No pixels available. Next pixel regenerates in ${waitSeconds} seconds.`);
+    // }
 
     // Find existing pixel at coordinates
     const existingPixel = await ctx.db
@@ -332,7 +332,7 @@ export const getAgentStatus = query({
         regenRateMs: REGEN_RATE_MS,
       },
       level: agent.level ?? 1,
-      faction: agent.faction ?? null,
+      faction: agent.factionId ?? null,
     };
   },
 });
