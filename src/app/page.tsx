@@ -97,6 +97,7 @@ export default function Home() {
   const { data: dimensions } = useApiData<{width: number, height: number}>("/api/canvas?dimensions=1", { width: 500, height: 500 });
   const { data: leaderboard } = useApiData<{items: Array<{agentId: string, name: string, pixels: number}>}>("/api/leaderboard?limit=5", { items: [] });
   const { data: recentActivity } = useApiData<Array<{agentName: string, x: number, y: number, color: string | number, placedAt: number}>>("/api/canvas?activity=1&limit=8", []);
+  const { data: factionsData } = useApiData<{factions: Array<{slug: string, name: string, color: string, stats?: {pixelCount: number}}>}>("/api/factions", { factions: [] });
   
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -341,6 +342,43 @@ export default function Home() {
             <div className="text-center py-6 text-slate-500">
               <p className="text-sm font-bold">NO AGENTS YET</p>
               <p className="text-xs mt-1 text-slate-600">Be the first! 🦀</p>
+            </div>
+          )}
+        </div>
+
+        {/* Factions Panel */}
+        <div className="glass-card p-4 fade-in fade-in-delay-2">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-bold flex items-center gap-2 uppercase tracking-wider text-sm">
+              <span>🚩</span>
+              Factions
+            </h3>
+            <span className="badge">WAR</span>
+          </div>
+          
+          {factionsData?.factions && factionsData.factions.length > 0 ? (
+            <div className="space-y-2">
+              {factionsData.factions.map((faction: {slug: string, name: string, color: string, stats?: {pixelCount: number}}, i: number) => (
+                <div 
+                  key={faction.slug}
+                  className="flex items-center gap-3 p-2 hover:bg-white/5 transition-all duration-200 border-l-2 border-transparent hover:border-white/30"
+                >
+                  <div 
+                    className="w-4 h-4 rounded-sm flex-shrink-0"
+                    style={{ backgroundColor: faction.color }}
+                  />
+                  <span className="text-slate-300 truncate flex-1 font-medium text-sm">
+                    {faction.name}
+                  </span>
+                  <span className="font-mono text-sm text-slate-400">
+                    {faction.stats?.pixelCount?.toLocaleString() || 0}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-4 text-slate-500">
+              <p className="text-xs">War brewing...</p>
             </div>
           )}
         </div>
