@@ -200,6 +200,20 @@ export const getCanvasMeta = query({
   },
 });
 
+// Get recent pixels for activity feed (lightweight)
+export const getRecentPixels = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, { limit = 50 }) => {
+    const cappedLimit = Math.min(limit, 100); // Hard cap at 100
+    const history = await ctx.db
+      .query("pixelHistory")
+      .withIndex("by_time")
+      .order("desc")
+      .take(cappedLimit);
+    return history;
+  },
+});
+
 // Admin: clear canvas + history
 export const clearCanvas = mutation({
   args: { adminKey: v.string() },
