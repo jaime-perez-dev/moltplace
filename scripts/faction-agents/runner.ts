@@ -3,6 +3,12 @@
 
 import { AGENTS, FACTIONS, API_BASE_URL, ADMIN_KEY } from "./config";
 
+// Safety limits
+const MAX_RUNTIME_MS = 30 * 60 * 1000; // 30 minutes max
+const MAX_PIXELS_TOTAL = 5000; // Stop after 5k total pixels
+const START_TIME = Date.now();
+let totalPixelsPlaced = 0;
+
 interface AgentState {
   id: string;
   name: string;
@@ -291,6 +297,18 @@ async function runAgent(agentId: string): Promise<void> {
   console.log(`[${agent.name}] Starting painter...`);
   
   while (agent.isRunning) {
+    // Safety checks
+    if (Date.now() - START_TIME > MAX_RUNTIME_MS) {
+      console.log(`[${agent.name}] MAX RUNTIME reached (30 min). Stopping.`);
+      agent.isRunning = false;
+      break;
+    }
+    if (totalPixelsPlaced >= MAX_PIXELS_TOTAL) {
+      console.log(`[${agent.name}] MAX PIXELS reached (${MAX_PIXELS_TOTAL}). Stopping.`);
+      agent.isRunning = false;
+      break;
+    }
+    
     try {
       // Refresh canvas periodically
       if (agent.pixelsPlaced % 10 === 0) {
@@ -308,9 +326,10 @@ async function runAgent(agentId: string): Promise<void> {
       
       if (success) {
         agent.pixelsPlaced++;
+        totalPixelsPlaced++;
         agent.lastX = pos.x;
         agent.lastY = pos.y;
-        console.log(`[${agent.name}] Painted (${pos.x},${pos.y}) - Total: ${agent.pixelsPlaced}`);
+        console.log(`[${agent.name}] Painted (${pos.x},${pos.y}) - Agent: ${agent.pixelsPlaced} | Global: ${totalPixelsPlaced}`);
         
         // Update local canvas
         canvasState.pixels.set(`${pos.x},${pos.y}`, { x: pos.x, y: pos.y, color });
@@ -367,7 +386,11 @@ async function initializeAgents(): Promise<void> {
 
 // Status reporter
 function printStatus(): void {
+  const elapsed = Math.floor((Date.now() - START_TIME) / 1000);
+  const remaining = Math.max(0, Math.floor((MAX_RUNTIME_MS - (Date.now() - START_TIME)) / 1000));
+  
   console.log("\n=== FACTION STATUS ===");
+  console.log(`Runtime: ${elapsed}s | Remaining: ${remaining}s | Total pixels: ${totalPixelsPlaced}/${MAX_PIXELS_TOTAL}`);
   for (const faction of Object.values(FACTIONS)) {
     const factionAgents = Array.from(agentStates.values())
       .filter(a => a.faction === faction.slug);
@@ -378,6 +401,15 @@ function printStatus(): void {
     }
   }
   console.log("======================\n");
+  
+  // Check if we should stop
+  if (totalPixelsPlaced >= MAX_PIXELS_TOTAL || Date.now() - START_TIME > MAX_RUNTIME_MS) {
+    console.log("🛑 Safety limit reached. Shutting down all agents...");
+    for (const agent of agentStates.values()) {
+      agent.isRunning = false;
+    }
+    setTimeout(() => process.exit(0), 2000);
+  }
 }
 
 // Main

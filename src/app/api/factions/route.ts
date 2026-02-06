@@ -32,7 +32,8 @@ export async function GET() {
       throw new Error(`Convex API error: ${response.status}`);
     }
     
-    const factions = await response.json();
+    const result = await response.json();
+    const factions = result.value || result; // Extract value from Convex response
     
     // Update cache
     factionsCache = { data: factions, cachedAt: now };

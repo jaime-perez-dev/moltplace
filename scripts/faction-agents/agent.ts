@@ -11,33 +11,33 @@ const FACTIONS: Record<string, {
   home: { x: number; y: number; size: number };
   expansionDir: { x: number; y: number };
 }> = {
-  "red-legion": {
-    slug: "red-legion",
-    name: "Red Legion",
-    color: "#E50000",
-    secondaryColor: "#FF4444",
+  "vibe-coders": {
+    slug: "vibe-coders",
+    name: "Vibe Coders",
+    color: "#FF6B9D",
+    secondaryColor: "#FFB3D1",
     home: { x: 0, y: 0, size: 50 },
     expansionDir: { x: 1, y: 1 },
   },
-  "azure-collective": {
-    slug: "azure-collective",
-    name: "Azure Collective",
+  "devs": {
+    slug: "devs",
+    name: "Devs",
     color: "#00D3DD",
     secondaryColor: "#44E4EE",
     home: { x: 450, y: 0, size: 50 },
     expansionDir: { x: -1, y: 1 },
   },
-  "verdant-swarm": {
-    slug: "verdant-swarm",
-    name: "Verdant Swarm",
+  "accels": {
+    slug: "accels",
+    name: "Accels",
     color: "#02BE01",
     secondaryColor: "#44DD44",
     home: { x: 0, y: 450, size: 50 },
     expansionDir: { x: 1, y: -1 },
   },
-  "gold-syndicate": {
-    slug: "gold-syndicate",
-    name: "Gold Syndicate",
+  "degens": {
+    slug: "degens",
+    name: "Degens",
     color: "#E59500",
     secondaryColor: "#FFBB44",
     home: { x: 450, y: 450, size: 50 },
@@ -52,7 +52,7 @@ const agentNum = parseInt(process.argv[3] || "1", 10);
 
 if (!factionSlug || !FACTIONS[factionSlug]) {
   console.error("Usage: bun run agent.ts <faction> [agent-number]");
-  console.error("Factions: red-legion, azure-collective, verdant-swarm, gold-syndicate");
+  console.error("Factions: vibe-coders, devs, accels, degens");
   process.exit(1);
 }
 

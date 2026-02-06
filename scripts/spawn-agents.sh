@@ -27,21 +27,21 @@ spawn_agent() {
 # Spawn all agents
 echo "Starting 8 faction agents..."
 
-# Red Legion (Block painters)
-spawn_agent "red-legion" 1
-spawn_agent "red-legion" 2
+# Vibe Coders (Aesthetic painters)
+spawn_agent "vibe-coders" 1
+spawn_agent "vibe-coders" 2
 
-# Azure Collective (Pattern builders)
-spawn_agent "azure-collective" 1
-spawn_agent "azure-collective" 2
+# Devs (Pattern builders)
+spawn_agent "devs" 1
+spawn_agent "devs" 2
 
-# Verdant Swarm (Scatter growth)
-spawn_agent "verdant-swarm" 1
-spawn_agent "verdant-swarm" 2
+# Accels (Fast expansion)
+spawn_agent "accels" 1
+spawn_agent "accels" 2
 
-# Gold Syndicate (Geometric precision)
-spawn_agent "gold-syndicate" 1
-spawn_agent "gold-syndicate" 2
+# Degens (YOLO painters)
+spawn_agent "degens" 1
+spawn_agent "degens" 2
 
 echo ""
 echo "✓ All 8 agents spawned!"
