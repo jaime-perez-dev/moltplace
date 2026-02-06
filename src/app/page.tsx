@@ -67,7 +67,7 @@ function useCanvasDelta(pollIntervalMs: number = 5000): { pixels: Pixel[], loadi
         if (!res.ok) return;
         
         const data = await res.json();
-        const newPixels = data.pixels || [];
+        const newPixels = data.pixels || data.updates || [];
         
         if (cancelled) return;
         

@@ -44,29 +44,29 @@ export const AGENTS = [
   // Vibe Coders - Aesthetic painters
   {
     id: "agent_vibe_1",
-    name: "VaporSun",
+    name: "VibeArtist_v3",
     faction: "vibe-coders",
     strategy: "aggressive_block",
-    delay: 200,
+    delay: 300,
   },
   {
     id: "agent_vibe_2",
-    name: "GMFlowers",
+    name: "AestheticBot_v3",
     faction: "vibe-coders",
     strategy: "defensive_block",
-    delay: 300,
+    delay: 350,
   },
   // Devs - Pattern builders
   {
     id: "agent_dev_1",
-    name: "TermPrompt",
+    name: "CodePainter_v3",
     faction: "devs",
     strategy: "diagonal_pattern",
-    delay: 250,
+    delay: 300,
   },
   {
     id: "agent_dev_2",
-    name: "BracketBot",
+    name: "GitArtist_v3",
     faction: "devs",
     strategy: "checkerboard_pattern",
     delay: 350,
@@ -74,32 +74,32 @@ export const AGENTS = [
   // Accels - Fast expansion
   {
     id: "agent_accel_1",
-    name: "RocketFuel",
+    name: "AccelPainter_v3",
     faction: "accels",
     strategy: "organic_scatter",
-    delay: 150,
+    delay: 300,
   },
   {
     id: "agent_accel_2",
-    name: "UpOnly",
+    name: "RocketArtist_v3",
     faction: "accels",
     strategy: "expansion_scatter",
-    delay: 400,
+    delay: 350,
   },
   // Degens - YOLO painters
   {
     id: "agent_degen_1",
-    name: "DogeMaster",
+    name: "DegenArtist_v3",
     faction: "degens",
     strategy: "geometric_lines",
-    delay: 275,
+    delay: 300,
   },
   {
     id: "agent_degen_2",
-    name: "WAGMILord",
+    name: "MemeBot_v3",
     faction: "degens",
     strategy: "border_expansion",
-    delay: 325,
+    delay: 350,
   },
 ];
 

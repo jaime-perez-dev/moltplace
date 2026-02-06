@@ -2,7 +2,7 @@
 // Draws actual pixel art patterns for each faction
 
 import { AGENTS, FACTIONS, API_BASE_URL, ADMIN_KEY } from "./config";
-import { PATTERNS, getRandomPattern } from "./patterns";
+import { getRandomPatternV2, FACTION_COLORS } from "./patterns-v2";
 
 // Safety limits - CONSERVATIVE for monitoring
 const MAX_RUNTIME_MS = 30 * 60 * 1000; // 30 minutes max
@@ -19,7 +19,7 @@ interface AgentState {
   factionConfig: typeof FACTIONS[keyof typeof FACTIONS];
   pixelsPlaced: number;
   isRunning: boolean;
-  currentPattern: { name: string; pattern: number[][]; offsetX: number; offsetY: number; pixelIndex: number } | null;
+  currentPattern: { name: string; pattern: number[][]; colors: Record<number, string>; offsetX: number; offsetY: number; pixelIndex: number } | null;
 }
 
 // Global state
@@ -110,31 +110,39 @@ function getNextPatternPixel(agent: AgentState): { x: number; y: number; color: 
   
   // If no current pattern or pattern complete, start a new one
   if (!agent.currentPattern || agent.currentPattern.pixelIndex >= getTotalPixels(agent.currentPattern.pattern)) {
-    const { name, pattern } = getRandomPattern(agent.faction);
+    const { name, pattern, colors } = getRandomPatternV2(agent.faction);
     
     // Calculate position in home territory with some randomness
     const homeX = faction.home.x;
     const homeY = faction.home.y;
     const homeSize = faction.home.size;
-    const expansionFactor = Math.floor(agent.pixelsPlaced / 50); // Expand territory over time
+    const expansionFactor = Math.floor(agent.pixelsPlaced / 100); // Expand territory over time
     
-    // Random offset within expanded territory
-    const maxOffset = homeSize + expansionFactor * 10;
-    const offsetX = homeX + Math.floor(Math.random() * maxOffset) * (faction.expansionDir.x || 1);
-    const offsetY = homeY + Math.floor(Math.random() * maxOffset) * (faction.expansionDir.y || 1);
+    // Random offset within expanded territory - ensure pattern fits
+    const patternWidth = pattern[0]?.length || 0;
+    const patternHeight = pattern.length;
+    const maxOffset = homeSize + expansionFactor * 15;
+    
+    let offsetX = homeX + Math.floor(Math.random() * maxOffset) * (faction.expansionDir.x || 1);
+    let offsetY = homeY + Math.floor(Math.random() * maxOffset) * (faction.expansionDir.y || 1);
+    
+    // Adjust to keep pattern in bounds
+    offsetX = Math.max(0, Math.min(500 - patternWidth, offsetX));
+    offsetY = Math.max(0, Math.min(500 - patternHeight, offsetY));
     
     agent.currentPattern = {
       name,
       pattern,
-      offsetX: Math.max(0, Math.min(480, offsetX)), // Keep in bounds
-      offsetY: Math.max(0, Math.min(480, offsetY)),
+      colors,
+      offsetX,
+      offsetY,
       pixelIndex: 0,
     };
     
-    console.log(`[${agent.name}] Starting pattern: ${name} at (${agent.currentPattern.offsetX}, ${agent.currentPattern.offsetY})`);
+    console.log(`[${agent.name}] Drawing: ${name} (${patternWidth}x${patternHeight}) at (${offsetX}, ${offsetY})`);
   }
   
-  const { pattern, offsetX, offsetY, pixelIndex } = agent.currentPattern;
+  const { pattern, colors, offsetX, offsetY, pixelIndex } = agent.currentPattern;
   
   // Find next non-zero pixel in pattern
   let idx = pixelIndex;
@@ -158,8 +166,8 @@ function getNextPatternPixel(agent: AgentState): { x: number; y: number; color: 
         continue;
       }
       
-      // Choose color based on value (1 = primary, 2 = secondary)
-      const color = value === 1 ? faction.color : faction.secondaryColor;
+      // Get color from pattern's color map
+      const color = colors[value] || faction.color;
       
       return { x, y, color };
     }
