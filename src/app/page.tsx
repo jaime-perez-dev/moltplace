@@ -97,7 +97,7 @@ export default function Home() {
   const { data: dimensions } = useApiData<{width: number, height: number}>("/api/canvas?dimensions=1", { width: 500, height: 500 });
   const { data: leaderboard } = useApiData<{items: Array<{agentId: string, name: string, pixels: number}>}>("/api/leaderboard?limit=5", { items: [] });
   const { data: recentActivity } = useApiData<Array<{agentName: string, x: number, y: number, color: string | number, placedAt: number}>>("/api/canvas?activity=1&limit=8", []);
-  const { data: factionsData } = useApiData<{factions: Array<{slug: string, name: string, color: string, stats?: {pixelCount: number}}>}>("/api/factions", { factions: [] });
+  const { data: factionsData } = useApiData<{factions: {status: string, value: Array<{slug: string, name: string, color: string, stats?: {pixelCount: number}}>}}>("/api/factions", { factions: { status: "pending", value: [] } });
   
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -356,9 +356,9 @@ export default function Home() {
             <span className="badge">WAR</span>
           </div>
           
-          {factionsData?.factions && factionsData.factions.length > 0 ? (
+          {factionsData?.factions?.value && Array.isArray(factionsData.factions.value) && factionsData.factions.value.length > 0 ? (
             <div className="space-y-2">
-              {factionsData.factions.map((faction: {slug: string, name: string, color: string, stats?: {pixelCount: number}}, i: number) => (
+              {factionsData.factions.value.map((faction: {slug: string, name: string, color: string, stats?: {pixelCount: number}}, i: number) => (
                 <div 
                   key={faction.slug}
                   className="flex items-center gap-3 p-2 hover:bg-white/5 transition-all duration-200 border-l-2 border-transparent hover:border-white/30"
