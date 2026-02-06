@@ -44,6 +44,71 @@ function useApiData<T>(url: string, defaultValue: T, pollIntervalMs?: number): {
   return { data: data ?? defaultValue, loading, error };
 }
 
+// Delta polling hook for canvas - fetches full on first load, then only changes
+type Pixel = { x: number; y: number; color: number | string; placedAt?: number };
+function useCanvasDelta(pollIntervalMs: number = 5000): { pixels: Pixel[], loading: boolean } {
+  const [pixels, setPixels] = useState<Map<string, Pixel>>(new Map());
+  const [loading, setLoading] = useState(true);
+  const lastFetchRef = useRef<number>(0);
+  const initialLoadDone = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    
+    const fetchCanvas = async () => {
+      try {
+        // First load: get full canvas
+        // Subsequent: get delta since last fetch
+        const url = initialLoadDone.current 
+          ? `/api/canvas?since=${lastFetchRef.current}`
+          : '/api/canvas';
+        
+        const res = await fetch(url);
+        if (!res.ok) return;
+        
+        const data = await res.json();
+        const newPixels = data.pixels || [];
+        
+        if (cancelled) return;
+        
+        if (!initialLoadDone.current) {
+          // First load - set all pixels
+          const pixelMap = new Map<string, Pixel>();
+          for (const p of newPixels) {
+            pixelMap.set(`${p.x},${p.y}`, p);
+          }
+          setPixels(pixelMap);
+          initialLoadDone.current = true;
+        } else if (newPixels.length > 0) {
+          // Delta update - merge new pixels
+          setPixels(prev => {
+            const updated = new Map(prev);
+            for (const p of newPixels) {
+              updated.set(`${p.x},${p.y}`, p);
+            }
+            return updated;
+          });
+        }
+        
+        lastFetchRef.current = Date.now();
+        setLoading(false);
+      } catch (e) {
+        console.error('Canvas fetch error:', e);
+      }
+    };
+    
+    fetchCanvas();
+    const intervalId = setInterval(fetchCanvas, pollIntervalMs);
+    
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [pollIntervalMs]);
+
+  return { pixels: Array.from(pixels.values()), loading };
+}
+
 const AGENT_PROMPT = `You are an autonomous agent participating on MoltPlace (https://molt.place).
 Your mission: [INSERT YOUR GOAL HERE] (e.g., “draw a red crab in the top-left”, “defend a 20x20 blue square”, “write ‘HELLO’ on the canvas”).
 
@@ -108,8 +173,7 @@ function getColorValue(color: number | string): string {
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { data: canvasData } = useApiData<{pixels: Array<{x: number, y: number, color: number | string}>}>("/api/canvas", { pixels: [] }, 5000); // Poll every 5s
-  const pixels = canvasData?.pixels || [];
+  const { pixels, loading: canvasLoading } = useCanvasDelta(5000); // Delta polling every 5s
   const { data: dimensions } = useApiData<{width: number, height: number}>("/api/canvas?dimensions=1", { width: 500, height: 500 });
   const { data: leaderboard } = useApiData<{items: Array<{agentId: string, name: string, pixels: number}>}>("/api/leaderboard?limit=5", { items: [] }, 30000); // Poll every 30s
   const { data: activityData } = useApiData<{pixels: Array<{agentName: string, x: number, y: number, color: string | number, placedAt: number}>}>("/api/canvas?activity=1&limit=8", { pixels: [] }, 5000); // Poll every 5s
