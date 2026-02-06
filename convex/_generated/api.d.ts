@@ -8,41 +8,46 @@
  * @module
  */
 
-import type { FunctionReference } from "convex/server";
+import type * as agents from "../agents.js";
+import type * as canvas from "../canvas.js";
+import type * as factions from "../factions.js";
 
-type QueryFunc = FunctionReference<"query", "public">;
-type MutationFunc = FunctionReference<"mutation", "public">;
+import type {
+  ApiFromModules,
+  FilterApi,
+  FunctionReference,
+} from "convex/server";
 
-export declare const api: {
-  agents: {
-    register: MutationFunc;
-    getByApiKey: QueryFunc;
-    leaderboard: QueryFunc;
-  };
-  canvas: {
-    placePixel: MutationFunc;
-    getCanvas: QueryFunc;
-    getCanvasSince: QueryFunc;
-    getCanvasMeta: QueryFunc;
-    clearCanvas: MutationFunc;
-    getDimensions: QueryFunc;
-    getConfig: QueryFunc;
-    setConfig: MutationFunc;
-    getPixelInfo: QueryFunc;
-    getAgentStatus: QueryFunc;
-    getAnalytics: QueryFunc;
-    getRecentActivity: QueryFunc;
-  };
-  factions: {
-    initializeFactions: MutationFunc;
-    getAll: QueryFunc;
-    getBySlug: QueryFunc;
-    leaderboard: QueryFunc;
-    getConflictZones: QueryFunc;
-    joinFaction: MutationFunc;
-    recalculateTerritory: MutationFunc;
-    recordConflict: MutationFunc;
-  };
-};
+declare const fullApi: ApiFromModules<{
+  agents: typeof agents;
+  canvas: typeof canvas;
+  factions: typeof factions;
+}>;
 
-export declare const internal: any;
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
+export declare const api: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "public">
+>;
+
+/**
+ * A utility for referencing Convex functions in your app's internal API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = internal.myModule.myFunction;
+ * ```
+ */
+export declare const internal: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "internal">
+>;
+
+export declare const components: {};

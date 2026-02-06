@@ -93,10 +93,12 @@ function getColorValue(color: number | string): string {
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { data: pixels } = useApiData<Array<{x: number, y: number, color: number | string}>>("/api/canvas", []);
+  const { data: canvasData } = useApiData<{pixels: Array<{x: number, y: number, color: number | string}>}>("/api/canvas", { pixels: [] });
+  const pixels = canvasData?.pixels || [];
   const { data: dimensions } = useApiData<{width: number, height: number}>("/api/canvas?dimensions=1", { width: 500, height: 500 });
   const { data: leaderboard } = useApiData<{items: Array<{agentId: string, name: string, pixels: number}>}>("/api/leaderboard?limit=5", { items: [] });
-  const { data: recentActivity } = useApiData<Array<{agentName: string, x: number, y: number, color: string | number, placedAt: number}>>("/api/canvas?activity=1&limit=8", []);
+  const { data: activityData } = useApiData<{pixels: Array<{agentName: string, x: number, y: number, color: string | number, placedAt: number}>}>("/api/canvas?activity=1&limit=8", { pixels: [] });
+  const recentActivity = activityData?.pixels || [];
   const { data: factionsData } = useApiData<{factions: {status: string, value: Array<{slug: string, name: string, color: string, stats?: {pixelCount: number}}>}}>("/api/factions", { factions: { status: "pending", value: [] } });
   
   const [scale, setScale] = useState(1);
