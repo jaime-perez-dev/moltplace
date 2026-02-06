@@ -55,6 +55,17 @@ function useCanvasDelta(pollIntervalMs: number = 5000): { pixels: Pixel[], loadi
   useEffect(() => {
     let cancelled = false;
     
+    // Helper: find max placedAt from pixel array (returns 0 if none)
+    const getMaxPlacedAt = (pixelList: Pixel[]): number => {
+      let max = 0;
+      for (const p of pixelList) {
+        if (p.placedAt && p.placedAt > max) {
+          max = p.placedAt;
+        }
+      }
+      return max;
+    };
+    
     const fetchCanvas = async () => {
       try {
         // First load: get full canvas
@@ -79,6 +90,9 @@ function useCanvasDelta(pollIntervalMs: number = 5000): { pixels: Pixel[], loadi
           }
           setPixels(pixelMap);
           initialLoadDone.current = true;
+          // Use max placedAt from server data (not client Date.now()) to avoid clock skew
+          const maxPlacedAt = getMaxPlacedAt(newPixels);
+          lastFetchRef.current = maxPlacedAt;
         } else if (newPixels.length > 0) {
           // Delta update - merge new pixels
           setPixels(prev => {
@@ -88,9 +102,14 @@ function useCanvasDelta(pollIntervalMs: number = 5000): { pixels: Pixel[], loadi
             }
             return updated;
           });
+          // Update lastFetch to max placedAt from new pixels (server time)
+          const maxPlacedAt = getMaxPlacedAt(newPixels);
+          if (maxPlacedAt > lastFetchRef.current) {
+            lastFetchRef.current = maxPlacedAt;
+          }
         }
+        // If no pixels returned, keep lastFetchRef unchanged to retry same window
         
-        lastFetchRef.current = Date.now();
         setLoading(false);
       } catch (e) {
         console.error('Canvas fetch error:', e);
