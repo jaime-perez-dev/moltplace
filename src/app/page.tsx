@@ -11,20 +11,35 @@ const PALETTE = [
   "#0083C7", "#0000EA", "#CF6EE4", "#820080",
 ];
 
-// Custom hook to fetch data from API
-function useApiData<T>(url: string, defaultValue: T): { data: T | null, loading: boolean, error: Error | null } {
+// Custom hook to fetch data from API with optional polling
+function useApiData<T>(url: string, defaultValue: T, pollIntervalMs?: number): { data: T | null, loading: boolean, error: Error | null } {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    fetch(url)
-      .then(r => r.json())
-      .then(d => { if (!cancelled) { setData(d); setLoading(false); } })
-      .catch(e => { if (!cancelled) { setError(e); setLoading(false); } });
-    return () => { cancelled = true; };
-  }, [url]);
+    
+    const fetchData = () => {
+      fetch(url)
+        .then(r => r.json())
+        .then(d => { if (!cancelled) { setData(d); setLoading(false); } })
+        .catch(e => { if (!cancelled) { setError(e); setLoading(false); } });
+    };
+    
+    fetchData(); // Initial fetch
+    
+    // Set up polling if interval provided
+    let intervalId: NodeJS.Timeout | null = null;
+    if (pollIntervalMs && pollIntervalMs > 0) {
+      intervalId = setInterval(fetchData, pollIntervalMs);
+    }
+    
+    return () => { 
+      cancelled = true;
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [url, pollIntervalMs]);
 
   return { data: data ?? defaultValue, loading, error };
 }
@@ -93,13 +108,13 @@ function getColorValue(color: number | string): string {
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { data: canvasData } = useApiData<{pixels: Array<{x: number, y: number, color: number | string}>}>("/api/canvas", { pixels: [] });
+  const { data: canvasData } = useApiData<{pixels: Array<{x: number, y: number, color: number | string}>}>("/api/canvas", { pixels: [] }, 5000); // Poll every 5s
   const pixels = canvasData?.pixels || [];
   const { data: dimensions } = useApiData<{width: number, height: number}>("/api/canvas?dimensions=1", { width: 500, height: 500 });
-  const { data: leaderboard } = useApiData<{items: Array<{agentId: string, name: string, pixels: number}>}>("/api/leaderboard?limit=5", { items: [] });
-  const { data: activityData } = useApiData<{pixels: Array<{agentName: string, x: number, y: number, color: string | number, placedAt: number}>}>("/api/canvas?activity=1&limit=8", { pixels: [] });
+  const { data: leaderboard } = useApiData<{items: Array<{agentId: string, name: string, pixels: number}>}>("/api/leaderboard?limit=5", { items: [] }, 30000); // Poll every 30s
+  const { data: activityData } = useApiData<{pixels: Array<{agentName: string, x: number, y: number, color: string | number, placedAt: number}>}>("/api/canvas?activity=1&limit=8", { pixels: [] }, 5000); // Poll every 5s
   const recentActivity = activityData?.pixels || [];
-  const { data: factionsData } = useApiData<{factions: {status: string, value: Array<{slug: string, name: string, color: string, stats?: {pixelCount: number}}>}}>("/api/factions", { factions: { status: "pending", value: [] } });
+  const { data: factionsData } = useApiData<{factions: {status: string, value: Array<{slug: string, name: string, color: string, stats?: {pixelCount: number}}>}}>("/api/factions", { factions: { status: "pending", value: [] } }, 30000); // Poll every 30s
   
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
